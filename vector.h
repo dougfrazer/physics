@@ -21,6 +21,7 @@ public:
     vector operator-() const;
     vector operator-( const vector B ) const;
     vector operator+( const vector B ) const;
+    vector operator*( const float s ) const;
 
     float   dot  ( const vector B ) const;
     vector  cross( const vector B ) const;

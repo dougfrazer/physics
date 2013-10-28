@@ -38,6 +38,13 @@ vector vector::operator+( const vector B ) const {
     v.z = z + B.z;
     return v;
 }
+vector vector::operator*( const float s ) const {
+    vector v;
+    v.x = x * s;
+    v.y = y * s;
+    v.z = z * s;
+    return v;
+}
 
 float vector::dot( const vector B ) const { 
     return x*B.x + y*B.y + z*B.z;

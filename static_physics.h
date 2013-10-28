@@ -12,5 +12,5 @@ public:
     void Reset() {}
 protected:
     bool DetectCollision( GEOMETRY* Incoming ) { return false; }
-    GEOMETRY* HandleCollision( GEOMETRY* Incoming ) { return Geometry; }
+    void HandleCollision( GEOMETRY* Incoming ) { }
 };

@@ -13,10 +13,25 @@ public:
     void Reset( );
 protected:
     //******************************************************************************
-    // Collision Detection using GJK
+    // Collision Detection:
+    // -------------------
+    //   This implementation of collision detection uses the GJK algorithm.
+    //
+    //   The core concept here is that we can detect if two convex shapes intersect
+    //   if within the shape, there are two points that when you subtract them equal zero.
+    //
+    //   That is the same thing as saying that if we construct the shape Ai - Bj (all
+    //   points in A minus all points in B, also known as the Minkowski Difference) and 
+    //   we can select 4 points which enclose the origin.
+    //
+    //   We start by selecting a random point in the Minkowski Difference, seeing if we 
+    //   can reach the origin, if we can not we are done, if we can, we try and find 
+    //   another point to construct our tetrahedron surrounding the origin, and then a third, 
+    //   and then a fourth.  If we can find all 4 points, we have a collision, otherwise we do not.
+    //
     //*****************************************************************************
     bool DetectCollision( GEOMETRY* Incoming );
-    GEOMETRY* HandleCollision( GEOMETRY* Incoming );
+    void HandleCollision( GEOMETRY* Incoming );
 
 protected:
     vertex*  x;
@@ -43,5 +58,5 @@ private:
     //
     // Note: this function modifies both the list and the direction.
     //******************************************************************************
-    bool   Simplex( std::vector<vector>* list, vector* d );
+    bool Simplex( std::vector<vector>* list, vector* d );
 };

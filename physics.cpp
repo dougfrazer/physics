@@ -31,7 +31,9 @@ void Physics_Update(float DeltaTime)
                 PHYSICS* b = PhysicsList.at(j);
                 bool Colliding = a->DetectCollision( b->Geometry );
                 if( Colliding ) {
-                    a->CollisionPending = a->HandleCollision( b->Geometry );
+                    // TODO: if multiple objects are colliding we need to preserve the state so they can all take their
+                    // appropriate action... for now, just ignore that.
+                    a->HandleCollision( b->Geometry );
                     Collision = true;
                 }
             }

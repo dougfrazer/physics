@@ -6,51 +6,41 @@ static const float g = 0.1;
 static const vector StartingVelocity( 0.0, 0.0, 0.0 );
 static const vector origin;
 
+//******************************************************************************
 RIGID_PHYSICS::RIGID_PHYSICS( GEOMETRY* Geo )
     : PHYSICS( Geo )
 {
     Reset();
 }
+//******************************************************************************
 
+//******************************************************************************
 RIGID_PHYSICS::~RIGID_PHYSICS()
 {
 }
+//******************************************************************************
 
+//******************************************************************************
 void RIGID_PHYSICS::Reset()
 {
     v = StartingVelocity;
 }
+//******************************************************************************
 
+//******************************************************************************
 void RIGID_PHYSICS::Update( float DeltaTime )
 {
     // update velocity + position due to gravity
     v.y += g * DeltaTime;
     Geometry->Position.y -= v.y * DeltaTime;
 }
-
 //******************************************************************************
-// Collision Detection:
-// -------------------
-//   This implementation of collision detection uses the GJK algorithm.
-//
-//   The core concept here is that we can detect if two convex shapes intersect
-//   if within the shape, there are two points that when you subtract them equal zero.
-//
-//   That is the same thing as saying that if we construct the shape Ai - Bj (all
-//   points in A minus all points in B, also known as the Minkowski Difference) and 
-//   we can select 4 points which enclose the origin.
-//
-//   We start by selecting a random point in the Minkowski Difference, seeing if we 
-//   can reach the origin, if we can not we are done, if we can, we try and find 
-//   another point to construct our tetrahedron surrounding the origin, and then a third, 
-//   and then a fourth.  If we can find all 4 points, we have a collision, otherwise we do not.
-//
+
 //******************************************************************************
 bool RIGID_PHYSICS::DetectCollision( GEOMETRY* In )
 {
     std::vector<vector> list;
     
-    // find a point in our object in the direction of the origin
     vector start( (vector(Geometry->VertexList[0]) + vector(Geometry->Position)) -
                    vector(In->VertexList[0]) + vector(In->Position) ); // start with any point in the mikowski difference
     list.push_back( start ); 
@@ -67,12 +57,40 @@ bool RIGID_PHYSICS::DetectCollision( GEOMETRY* In )
     }
     return false;
 }
+//******************************************************************************
 
-GEOMETRY* RIGID_PHYSICS::HandleCollision( GEOMETRY* In )
+//******************************************************************************
+void RIGID_PHYSICS::HandleCollision( GEOMETRY* In )
 {
-    v = -v;
-}
+    // for now, just pretend its perfectly elastic
+    static const float e = 0.7;
+    v = v * (-e);
+    if( v.x < 0.1 && v.x > -0.1 ) { v.x = 0; }
+    if( v.y < 0.1 && v.y > -0.1 ) { v.y = 0; }
+    if( v.z < 0.1 && v.z > -0.1 ) { v.z = 0; }
 
+    // TODO:
+    // 1.) Get the point of impact and normal of the colliding plane
+    // 2.) apply a force in the direction of the plane normal at the point of impact
+    // 3.) translate force to center of mass
+
+    // v_new = v_old + j*n
+    // where j is the magnitude of the impulse and n is the normal to the plane of impact
+    //
+    //        -(1 - e)v*n
+    // j =  -----------------------
+    //      1/m +  (r x n)^2 / I^2
+    //
+    // e = elasticity (0.0 - 1.0)
+    // v = current velocity
+    // n = normal to the plane of impact
+    // m = mass
+    // r = vector to point of impact from center of mass
+    // I = moment of inertia
+}
+//******************************************************************************
+
+//******************************************************************************
 vector RIGID_PHYSICS::Support( const vector d, const GEOMETRY* Geo )
 {
     float dot_product = -std::numeric_limits<float>::infinity() ;
@@ -88,15 +106,20 @@ vector RIGID_PHYSICS::Support( const vector d, const GEOMETRY* Geo )
     assert( dot_product != -std::numeric_limits<float>::infinity() );
     return closest;
 }
+//******************************************************************************
 
+//******************************************************************************
 // Find the furthest point in the minkowski difference of A and B in the direction d.
 // This is the same as saying find the furthest point in A in the direction of d 
 // MINUS the furthest point in B in the opposite direction
+//******************************************************************************
 vector RIGID_PHYSICS::Support( const vector d, const GEOMETRY* A, const GEOMETRY* B )
 {
     return Support( d, A ) - Support( -d, B ); 
 }
+//******************************************************************************
 
+//******************************************************************************
 bool RIGID_PHYSICS::Simplex( std::vector<vector>* list, vector* d )
 {
     if( list->size() == 2 ) {
@@ -170,3 +193,4 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector>* list, vector* d )
     }
     return false;
 }
+//******************************************************************************
