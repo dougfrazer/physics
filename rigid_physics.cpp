@@ -28,6 +28,24 @@ void RIGID_PHYSICS::Update( float DeltaTime )
     Geometry->Position.y -= v.y * DeltaTime;
 }
 
+//******************************************************************************
+// Collision Detection:
+// -------------------
+//   This implementation of collision detection uses the GJK algorithm.
+//
+//   The core concept here is that we can detect if two convex shapes intersect
+//   if within the shape, there are two points that when you subtract them equal zero.
+//
+//   That is the same thing as saying that if we construct the shape Ai - Bj (all
+//   points in A minus all points in B, also known as the Minkowski Difference) and 
+//   we can select 4 points which enclose the origin.
+//
+//   We start by selecting a random point in the Minkowski Difference, seeing if we 
+//   can reach the origin, if we can not we are done, if we can, we try and find 
+//   another point to construct our tetrahedron surrounding the origin, and then a third, 
+//   and then a fourth.  If we can find all 4 points, we have a collision, otherwise we do not.
+//
+//******************************************************************************
 bool RIGID_PHYSICS::DetectCollision( GEOMETRY* In )
 {
     std::vector<vector> list;
@@ -52,12 +70,9 @@ bool RIGID_PHYSICS::DetectCollision( GEOMETRY* In )
 
 GEOMETRY* RIGID_PHYSICS::HandleCollision( GEOMETRY* In )
 {
-    return Geometry;
+    v = -v;
 }
 
-//
-// Find the point that is furthest direction in a direction for a specific geometry
-//
 vector RIGID_PHYSICS::Support( const vector d, const GEOMETRY* Geo )
 {
     float dot_product = -std::numeric_limits<float>::infinity() ;
