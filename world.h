@@ -15,8 +15,9 @@ void World_Deinit    ( void );
 void World_Draw      ( void );
 void World_Update    ( float DeltaTime );
 
+// Utility functions
+void World_Reset     ( void );
+void World_Pause     ( void );
+
 void World_AddObject    ( OBJECT* o );
 void World_RemoveObject ( OBJECT* o );
-
-// aggregious hack
-void World_ResetCircle();

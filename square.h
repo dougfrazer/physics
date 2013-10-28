@@ -14,6 +14,7 @@ public:
 public:
     void Update    ( float DeltaTime );
     void Draw      ( void );
+    void Reset     ( void );
 private:
     float      size;
     vertex     position;

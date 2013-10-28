@@ -10,6 +10,8 @@
 
 #define PI 3.14159265
 
+static const vertex InitialPosition = { 0.0, 40.0, 0.0 };
+
 CIRCLE::CIRCLE(float r)
 {
     radius = r;
@@ -17,12 +19,10 @@ CIRCLE::CIRCLE(float r)
     // define geometry (todo: this should be actual data)
     Geometry = new GEOMETRY();
     CreateIcosahadron(5 , Geometry , 0);
+    Geometry->Position = InitialPosition;
 
     // attach physics
-    Physics = new RIGID_PHYSICS( Geometry, &Position );
-
-    // define center of mass (also, this should be in data)
-    Reset();
+    Physics = new RIGID_PHYSICS( Geometry );
 }
 
 CIRCLE::~CIRCLE()
@@ -32,21 +32,17 @@ CIRCLE::~CIRCLE()
 
 void CIRCLE::Reset()
 {
-    Position.x = 0.0;
-    Position.y = 40.0;
-    Position.z = 0.0;
+    Geometry->Position = InitialPosition;
     Physics->Reset();
 }
 
 void CIRCLE::Update( float DeltaTime )
 {
-    // lets rotate it for testing
-    Physics->Update( DeltaTime );
 }
 
 void CIRCLE::Draw( void )
 {
-    glTranslatef(Position.x, Position.y, Position.z);
+    glTranslatef(Geometry->Position.x, Geometry->Position.y, Geometry->Position.z);
     glBegin( GL_LINE_STRIP );
         for( int i = 0; i < Geometry->NumFaces; i++ ) {
             glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v1 ]);

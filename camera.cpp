@@ -1,18 +1,19 @@
 #include "camera.h"
 #include "world.h"
+#include "vector.h"
 
 #include "common.h"
 #include <GLUT/glut.h>
 
-static const vector4 StartingPosition = { 60.0, 15.0, 0.0 , 0.0 };
-static const vector4 StartingLook     = { 0.0 , 15.0 , 0.0 , 0.0 };
-static const vector4 StartingOrbit    = { 0.0 , 0.0 , 0.0 , 0.0 };
+static const vector StartingPosition( 60.0, 15.0, 0.0  );
+static const vector StartingLook    ( 0.0 , 15.0, 0.0  );
+static const vector StartingOrbit   ( 0.0 , 0.0 , 0.0  );
 
 static struct {
-    vector4      Position;
-    vector4      Look;
+    vector       Position;
+    vector       Look;
     float        Degrees;
-    vector4      orbit;
+    vector       orbit;
     unsigned int Pressed;
 } CameraData;
 
@@ -22,7 +23,7 @@ static void processNormalKeys(unsigned char key, int x, int y);
 static void releaseNormalKeys(unsigned char key, int x, int y);
 static void Camera_Reset();
 
-enum KEYBOARD
+enum KEYBOARD_EVENTS
 {
     FORWARD,
     BACK,
@@ -109,7 +110,9 @@ void processNormalKeys(unsigned char key, int x, int y)
     case 'd': CameraData.Pressed |= 1<<RIGHT;   break;
     case 'q': CameraData.Pressed |= 1<<UP;      break;
     case 'e': CameraData.Pressed |= 1<<DOWN;    break;
-    case 'r': World_ResetCircle(); Camera_Reset(); break;
+    case 'r': World_Reset(); Camera_Reset();    break;
+    case ' ': World_Pause();                    break;
+    case 'p': World_Pause(); World_Update( 0.0166666666 ); World_Pause(); break;
     }
 }
 

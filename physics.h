@@ -9,13 +9,12 @@ public:
     virtual ~PHYSICS() {}
 
 public:
-    virtual void Update( float DeltaTime ) = 0;
-    virtual void Reset() = 0;
-
-protected:
+    virtual void      Update          ( float DeltaTime ) = 0;
+    virtual void      Reset           ( void ) = 0;
+    virtual bool      DetectCollision ( GEOMETRY* Object ) = 0;
+    virtual GEOMETRY* HandleCollision ( GEOMETRY* Object ) = 0;
     GEOMETRY* Geometry;
-    
-protected:
-    static GEOMETRY* GetGeo( int i );
+    GEOMETRY* CollisionPending;
 };
 
+void Physics_Update( float DeltaTime );

@@ -14,8 +14,7 @@ public:
     void Draw      ( void );
     void Reset     ( void );
 private:
-    float        radius;
-    vertex     Position;
+    float       radius;
 
     void CreateIcosahadron(float r, GEOMETRY* Geometry, int subdivision);
 };

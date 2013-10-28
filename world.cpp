@@ -2,24 +2,29 @@
 #include "object.h"
 #include "circle.h"
 #include "square.h"
+#include "physics.h"
 #include <list>
 
 std::list<OBJECT*> Objects;
 
-static CIRCLE* Circle;
-static SQUARE* Square;
+static struct {
+    bool Paused;
+} WorldData;
 
 void World_Init()
 {
-    Circle = new CIRCLE( 5 );
-    Square = new SQUARE( 15 );
-    World_AddObject( Circle );
-    World_AddObject( Square );
+    WorldData.Paused = false;
+    World_AddObject( new CIRCLE( 5 ) );
+    World_AddObject( new SQUARE( 15 ) );
 }
 
 void World_Deinit()
 {
-
+    std::list<OBJECT*>::iterator it;
+    for( it = Objects.begin(); it != Objects.end(); it++ ) {
+        OBJECT* o = *it;
+        delete( o );
+    }
 }
 
 void World_Draw()
@@ -31,13 +36,23 @@ void World_Draw()
     }
 }
 
-void World_ResetCircle()
+void World_Reset()
 {
-    Circle->Reset();
+    std::list<OBJECT*>::iterator it;
+    for( it = Objects.begin(); it != Objects.end(); it++ ) {
+        OBJECT* o = *it;
+        o->Reset();
+    }
 }
 
 void World_Update( float DeltaTime )
 {
+    if( WorldData.Paused ) {
+        return;
+    }
+
+    Physics_Update( DeltaTime );
+
     std::list<OBJECT*>::iterator it;
     for( it = Objects.begin(); it != Objects.end(); it++ ) {
         OBJECT* o = *it;
@@ -53,4 +68,9 @@ void World_AddObject( OBJECT* o )
 void World_RemoveObject( OBJECT* o )
 {
     Objects.remove(o);
+}
+
+void World_Pause()
+{
+    WorldData.Paused = WorldData.Paused ? false : true;
 }

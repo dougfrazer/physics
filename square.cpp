@@ -1,7 +1,7 @@
 #include "square.h"
 #include "geometry.h"
 #include "stdlib.h"
-#include "none_physics.h"
+#include "static_physics.h"
 #include <GLUT/glut.h>
 
 
@@ -27,10 +27,15 @@ SQUARE::SQUARE(float s)
     Geometry->VertexList[3].y = 0.0;
     Geometry->VertexList[3].z = s;
 
-    Physics = new NONE_PHYSICS( Geometry );
+    Physics = new STATIC_PHYSICS( Geometry );
 }
 
 SQUARE::~SQUARE()
+{
+
+}
+
+void SQUARE::Reset()
 {
 
 }
