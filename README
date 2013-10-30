@@ -1,1 +1,10 @@
-Playing around with phsyics, this has been built on an Intel-based Macbook Air.
+A simple implementation of various physics-related game features.
+
+- Collision detection using GJK
+- more to come...
+
+to build:
+ - on osx: make
+ - on linux: make linux
+
+you need to have freeglut on linux.
