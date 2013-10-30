@@ -3,7 +3,11 @@
 #include "vector.h"
 
 #include "common.h"
+#if __APPLE__
 #include <GLUT/glut.h>
+#elif __LINUX__
+#include <GL/glut.h>
+#endif
 
 static const vector StartingPosition( 60.0, 15.0, 0.0  );
 static const vector StartingLook    ( 0.0 , 15.0, 0.0  );

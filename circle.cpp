@@ -6,7 +6,11 @@
 #include "math.h"
 #include "string.h"
 
+#if __APPLE__
 #include <GLUT/glut.h>
+#elif __LINUX__
+#include <GL/glut.h>
+#endif
 
 #define PI 3.14159265
 

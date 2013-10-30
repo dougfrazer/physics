@@ -1,4 +1,9 @@
+#if __LINUX__
+#include <GL/glut.h>
+#include <GL/freeglut.h>
+#elif __APPLE__
 #include <GLUT/glut.h>
+#endif
 #include "time.h"
 
 #include "world.h"
@@ -52,7 +57,11 @@ static void Main_Update( float DeltaTime )
     Camera_Update( DeltaTime );
     
     glutPostRedisplay();
+#if __APPLE__
     glutCheckLoop();
+#elif __LINUX__
+    glutMainLoopEvent();
+#endif
 }
 //*****************************************************************************
 static void Main_Draw()
