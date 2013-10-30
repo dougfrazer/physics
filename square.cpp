@@ -2,7 +2,11 @@
 #include "geometry.h"
 #include "stdlib.h"
 #include "static_physics.h"
+#if __LINUX__
+#include <GL/glut.h>
+#elif __APPLE__
 #include <GLUT/glut.h>
+#endif
 
 
 SQUARE::SQUARE(float s)
