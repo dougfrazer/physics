@@ -1,6 +1,6 @@
 #include "camera.h"
 #include "world.h"
-#include "vector.h"
+#include "vector3.h"
 
 #include "common.h"
 #if __APPLE__
@@ -9,15 +9,15 @@
 #include <GL/glut.h>
 #endif
 
-static const vector StartingPosition( 60.0, 15.0, 0.0  );
-static const vector StartingLook    ( 0.0 , 15.0, 0.0  );
-static const vector StartingOrbit   ( 0.0 , 0.0 , 0.0  );
+static const vector3 StartingPosition( 60.0, 15.0, 0.0  );
+static const vector3 StartingLook    ( 0.0 , 15.0, 0.0  );
+static const vector3 StartingOrbit   ( 0.0 , 0.0 , 0.0  );
 
 static struct {
-    vector       Position;
-    vector       Look;
+    vector3       Position;
+    vector3       Look;
     float        Degrees;
-    vector       orbit;
+    vector3       orbit;
     unsigned int Pressed;
 } CameraData;
 

@@ -2,9 +2,10 @@
 #include "rigid_physics.h"
 #include "geometry.h"
 
-static const float g = 0.1;
-static const vector StartingVelocity( 0.0, 0.0, 0.0 );
-static const vector origin;
+static const float g = 0.2;
+static const float e = 0.85;
+static const vector3 StartingVelocity( 0.0, 0.0, 0.0 );
+static const vector3 origin;
 
 //******************************************************************************
 RIGID_PHYSICS::RIGID_PHYSICS( GEOMETRY* Geo )
@@ -28,25 +29,25 @@ void RIGID_PHYSICS::Reset()
 //******************************************************************************
 
 //******************************************************************************
-void RIGID_PHYSICS::Update( float DeltaTime )
+void RIGID_PHYSICS::Update( const float DeltaTime )
 {
     // update velocity + position due to gravity
     v.y += g * DeltaTime;
-    Geometry->Position.y -= v.y * DeltaTime;
+    Pending->Position.y -= v.y * DeltaTime;
 }
 //******************************************************************************
 
 //******************************************************************************
-bool RIGID_PHYSICS::DetectCollision( GEOMETRY* In )
+bool RIGID_PHYSICS::DetectCollision( const GEOMETRY* In )
 {
-    std::vector<vector> list;
+    std::vector<vector3> list;
     
-    vector start( (vector(Geometry->VertexList[0]) + vector(Geometry->Position)) -
-                   vector(In->VertexList[0]) + vector(In->Position) ); // start with any point in the mikowski difference
+    vector3 start( (vector3(Pending->VertexList[0]) + vector3(Pending->Position)) -
+                   vector3(In->VertexList[0]) + vector3(In->Position) ); // start with any point in the mikowski difference
     list.push_back( start ); 
-    vector d = -start;
+    vector3 d = -start;
     while( true ) {
-        vector a = Support( d, Geometry, In );
+        vector3 a = Support( d, Pending, In );
         if( d.dot( a ) < 0 ) {
             return false;
         }
@@ -60,14 +61,11 @@ bool RIGID_PHYSICS::DetectCollision( GEOMETRY* In )
 //******************************************************************************
 
 //******************************************************************************
-void RIGID_PHYSICS::HandleCollision( GEOMETRY* In )
+void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
 {
     // for now, just pretend its perfectly elastic
-    static const float e = 0.7;
     v = v * (-e);
-    if( v.x < 0.1 && v.x > -0.1 ) { v.x = 0; }
-    if( v.y < 0.1 && v.y > -0.1 ) { v.y = 0; }
-    if( v.z < 0.1 && v.z > -0.1 ) { v.z = 0; }
+    Pending->Position = Geometry->Position;
 
     // TODO:
     // 1.) Get the point of impact and normal of the colliding plane
@@ -85,18 +83,18 @@ void RIGID_PHYSICS::HandleCollision( GEOMETRY* In )
     // v = current velocity
     // n = normal to the plane of impact
     // m = mass
-    // r = vector to point of impact from center of mass
+    // r = vector3 to point of impact from center of mass
     // I = moment of inertia
 }
 //******************************************************************************
 
 //******************************************************************************
-vector RIGID_PHYSICS::Support( const vector d, const GEOMETRY* Geo )
+vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo )
 {
     float dot_product = -std::numeric_limits<float>::infinity() ;
-    vector closest;
+    vector3 closest;
     for( int i = 0; i < Geo->NumVertices; i++ ) {
-        vector t = vector(Geo->VertexList[i]) + vector(Geo->Position);
+        vector3 t = vector3(Geo->VertexList[i]) + vector3(Geo->Position);
         float c = d.dot( t );
         if( c >= dot_product ) {
             dot_product = c;
@@ -113,31 +111,31 @@ vector RIGID_PHYSICS::Support( const vector d, const GEOMETRY* Geo )
 // This is the same as saying find the furthest point in A in the direction of d 
 // MINUS the furthest point in B in the opposite direction
 //******************************************************************************
-vector RIGID_PHYSICS::Support( const vector d, const GEOMETRY* A, const GEOMETRY* B )
+vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B )
 {
     return Support( d, A ) - Support( -d, B ); 
 }
 //******************************************************************************
 
 //******************************************************************************
-bool RIGID_PHYSICS::Simplex( std::vector<vector>* list, vector* d )
+bool RIGID_PHYSICS::Simplex( std::vector<vector3>* list, vector3* d )
 {
     if( list->size() == 2 ) {
         // we have a line:
         // figure out which point is closer to the origin
         
-        // NOTE: A is the vector we just added, and are testing against
-        // AB represents the vector from point A to B
-        // AO represents the vector from A to the origin
+        // NOTE: A is the vector3 we just added, and are testing against
+        // AB represents the vector3 from point A to B
+        // AO represents the vector3 from A to the origin
         // if the dot product is positive, there is some projection of AB on AO.
-        // this tells us that the vector AB is part of a tetrahedron that encloses the origin.
+        // this tells us that the vector3 AB is part of a tetrahedron that encloses the origin.
         // therefore, we want to keep A, and continue the algorithm to find a third point
         // (also update direction to point towards the origin).
         // otherwise (if dot product is less than zero) we want to pop A and find another point
-        vector a = list->at(1);
-        vector b = list->at(0);
-        vector ab = b - a;
-        vector ao = -a;
+        vector3 a = list->at(1);
+        vector3 b = list->at(0);
+        vector3 ab = b - a;
+        vector3 ao = -a;
         if( ab.dot( ao ) > 0 ) {
             *d = ab.cross(ao).cross(ab);
         } else { 
@@ -146,13 +144,13 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector>* list, vector* d )
         }
     } else if( list->size() == 3 ) {
         // we have a triangle/plane:
-        vector a = list->at(2);
-        vector b = list->at(1);
-        vector c = list->at(0);
-        vector ab = b - a;
-        vector ac = c - a;
-        vector bc = c - b;
-        vector ao = -a;
+        vector3 a = list->at(2);
+        vector3 b = list->at(1);
+        vector3 c = list->at(0);
+        vector3 ab = b - a;
+        vector3 ac = c - a;
+        vector3 bc = c - b;
+        vector3 ao = -a;
         if( ab.dot( ao ) > 0 ) {
            if( bc.dot( ao ) > 0 ) {
                 *d = ab.cross(ao).cross(ab);
@@ -175,14 +173,14 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector>* list, vector* d )
     } else if( list->size() == 4 ) {
         // we have a tetrahedron
         // return whether or not the origin is enclosed in the tetrahedron
-        vector a = list->at(3);
-        vector b = list->at(2);
-        vector c = list->at(1);
-        vector d = list->at(0);
-        vector ab = b - a;
-        vector ac = c - a;
-        vector ad = d - a;
-        vector ao = -a;
+        vector3 a = list->at(3);
+        vector3 b = list->at(2);
+        vector3 c = list->at(1);
+        vector3 d = list->at(0);
+        vector3 ab = b - a;
+        vector3 ac = c - a;
+        vector3 ad = d - a;
+        vector3 ao = -a;
         if( ab.dot( ao ) > 0 && ac.dot( ao ) > 0 && ad.dot( ao ) > 0 ) {
             return true;
         } else {

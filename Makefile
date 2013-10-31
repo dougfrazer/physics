@@ -1,4 +1,4 @@
-default:
+default: apple
 apple:
 	g++ -D__APPLE__ -g *.cpp -framework OpenGL -framework GLUT
 

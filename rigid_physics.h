@@ -1,5 +1,5 @@
 #include "physics.h"
-#include "vector.h"
+#include "vector3.h"
 #include <vector>
 
 class RIGID_PHYSICS : public PHYSICS
@@ -9,7 +9,7 @@ public:
     ~RIGID_PHYSICS();
 
 public:
-    void Update( float DeltaTime );
+    void Update( const float DeltaTime );
     void Reset( );
 protected:
     //******************************************************************************
@@ -30,12 +30,12 @@ protected:
     //   and then a fourth.  If we can find all 4 points, we have a collision, otherwise we do not.
     //
     //*****************************************************************************
-    bool DetectCollision( GEOMETRY* Incoming );
-    void HandleCollision( GEOMETRY* Incoming );
+    bool DetectCollision( const GEOMETRY* Incoming );
+    void HandleCollision( const GEOMETRY* Incoming );
 
 protected:
     vertex*  x;
-    vector   v;
+    vector3   v;
 
 private:
     //******************************************************************************
@@ -44,8 +44,8 @@ private:
     //   This will attempt to find the closest point in the geometry to the vector
     //   passed in.
     //******************************************************************************
-    vector Support( const vector d, const GEOMETRY* Geo );
-    vector Support( const vector d, const GEOMETRY* A, const GEOMETRY* B );
+    vector3 Support( const vector3 d, const GEOMETRY* Geo );
+    vector3 Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B );
 
     //******************************************************************************
     // Simplex:
@@ -58,5 +58,5 @@ private:
     //
     // Note: this function modifies both the list and the direction.
     //******************************************************************************
-    bool Simplex( std::vector<vector>* list, vector* d );
+    bool Simplex( std::vector<vector3>* list, vector3* d );
 };

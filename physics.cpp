@@ -3,14 +3,22 @@
 #include <vector>
 
 static std::vector<PHYSICS*> PhysicsList(0);
+static std::vector<GEOMETRY*> GeometryList(0);
 
 PHYSICS::PHYSICS( GEOMETRY* Geo )
 {
     Geometry = Geo;
+    Pending = new GEOMETRY( Geo );
     PhysicsList.push_back( this ); 
+    GeometryList.push_back( Geo );
 }
 
-void Physics_Update(float DeltaTime)
+PHYSICS::~PHYSICS()
+{
+    // remove them from the list
+}
+
+void Physics_Update( float DeltaTime )
 {
     int NumObjects = PhysicsList.size();
     
@@ -20,23 +28,21 @@ void Physics_Update(float DeltaTime)
     }
 
     // For each object, tell it to "apply whatever forces are necessary to get it out of each collision"
-    // and do all this until there are no collisions left
     bool Collision = false;
-    do {
-        Collision = false;
-        for( int i = 0; i < NumObjects; i++ ) {
-            for( int j = 0; j < NumObjects; j++ ) {
-                if( j == i ) continue; // can't collide with yourself
-                PHYSICS* a = PhysicsList.at(i);
-                PHYSICS* b = PhysicsList.at(j);
-                bool Colliding = a->DetectCollision( b->Geometry );
-                if( Colliding ) {
-                    // TODO: if multiple objects are colliding we need to preserve the state so they can all take their
-                    // appropriate action... for now, just ignore that.
-                    a->HandleCollision( b->Geometry );
-                    Collision = true;
-                }
+    for( int i = 0; i < NumObjects; i++ ) {
+        for( int j = 0; j < NumObjects; j++ ) {
+            if( j == i ) continue; // can't collide with yourself
+            PHYSICS* a = PhysicsList.at(i);
+            PHYSICS* b = PhysicsList.at(j);
+            bool Colliding = a->DetectCollision( b->Geometry );
+            if( Colliding ) {
+                a->HandleCollision( b->Geometry );
             }
         }
-    } while( false /* Collision */ );
+    }
+
+    // Apply pending geometry
+    for( int i = 0; i < NumObjects; i++) {
+        *PhysicsList.at(i)->Geometry = *PhysicsList.at(i)->Pending;
+    }
 }

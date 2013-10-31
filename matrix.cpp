@@ -14,15 +14,15 @@ matrix3::matrix3(float a1, float a2, float a3,
     z1 = c1; z2 = c2; z3 = c3;
 }
 
-vector matrix3::operator*( const vector B ) const { 
-    vector v; 
+vector3 matrix3::operator*( const vector3 B ) const { 
+    vector3 v; 
     v.x = x1*B.x + x2*B.y + x3*B.z;
     v.y = y1*B.x + y2*B.y + y3*B.z;
     v.z = z1*B.x + z2*B.y + y3*B.z; 
     return v;
 }
 
-skew_symmetric_matrix3::skew_symmetric_matrix3( const vector A ) 
+skew_symmetric_matrix3::skew_symmetric_matrix3( const vector3 A ) 
     : matrix3( 0.0, -A.z, A.y, A.z, 0.0, -A.x, -A.y, A.x, 0.0 )
 {
 }

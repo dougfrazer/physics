@@ -1,7 +1,7 @@
 #ifndef __MATRIX_H__
 #define __MATRIX_H__
 
-#include "vector.h"
+#include "vector3.h"
 
 //******************************************************************************
 // Matrix3 - Three-Dimensional Matrix
@@ -18,7 +18,7 @@ public:
             float b1, float b2, float b3,
             float c1, float c2, float c3);
 
-    vector operator*( const vector B ) const;
+    vector3 operator*( const vector3 B ) const;
 };
 
 //******************************************************************************
@@ -26,7 +26,7 @@ public:
 //******************************************************************************
 class skew_symmetric_matrix3 : public matrix3 {
 public:
-    skew_symmetric_matrix3( const vector A ); 
+    skew_symmetric_matrix3( const vector3 A ); 
 };
 
 #endif

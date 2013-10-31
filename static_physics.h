@@ -8,9 +8,9 @@ public:
     ~STATIC_PHYSICS() {}
 
 public:
-    void Update( float DeltaTime ) {}
+    void Update( const float DeltaTime ) {}
     void Reset() {}
 protected:
-    bool DetectCollision( GEOMETRY* Incoming ) { return false; }
-    void HandleCollision( GEOMETRY* Incoming ) { }
+    bool DetectCollision( const GEOMETRY* Incoming ) { return false; }
+    void HandleCollision( const GEOMETRY* Incoming ) { }
 };
