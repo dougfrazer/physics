@@ -47,6 +47,14 @@ void CIRCLE::Update( float DeltaTime )
 void CIRCLE::Draw( void )
 {
     glTranslatef(Geometry->Position.x, Geometry->Position.y, Geometry->Position.z);
+
+/*
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, (GLfloat*)Geometry->VertexList);
+    glDrawArrays(GL_LINES, 0, Geometry->NumVertices);
+    glDisableClientState(GL_VERTEX_ARRAY);
+*/
+
     glBegin( GL_LINE_STRIP );
         for( int i = 0; i < Geometry->NumFaces; i++ ) {
             glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v1 ]);
