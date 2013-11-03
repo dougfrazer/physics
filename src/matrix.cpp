@@ -39,7 +39,7 @@ vector3 matrix3::operator*( const vector3 B ) const {
     vector3 v; 
     v.x = x1*B.x + x2*B.y + x3*B.z;
     v.y = y1*B.x + y2*B.y + y3*B.z;
-    v.z = z1*B.x + z2*B.y + y3*B.z; 
+    v.z = z1*B.x + z2*B.y + z3*B.z; 
     return v;
 }
 
