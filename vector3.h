@@ -21,7 +21,7 @@ public:
     vector3 operator-() const;
     vector3 operator-( const vector3 B ) const;
     vector3 operator+( const vector3 B ) const;
-    vector3 operator*( const float s ) const;
+    vector3 operator*( const float s )   const;
 
     float    dot  ( const vector3 B ) const;
     vector3  cross( const vector3 B ) const;

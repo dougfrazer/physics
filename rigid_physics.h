@@ -34,8 +34,9 @@ protected:
     void HandleCollision( const GEOMETRY* Incoming );
 
 protected:
-    vertex*  x;
-    vector3   v;
+    vertex*   x; // position (center of mass)
+    vector3   v; // velocity
+    vector3   w; // angular veclocity
 
 private:
     //******************************************************************************
@@ -59,4 +60,7 @@ private:
     // Note: this function modifies both the list and the direction.
     //******************************************************************************
     bool Simplex( std::vector<vector3>* list, vector3* d );
+
+    vector3 GetCollisionPoint( const GEOMETRY* In );
+    vector3 GetCollisionPlaneNormal( const GEOMETRY* In );
 };

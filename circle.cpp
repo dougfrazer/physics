@@ -46,7 +46,11 @@ void CIRCLE::Update( float DeltaTime )
 
 void CIRCLE::Draw( void )
 {
-    glTranslatef(Geometry->Position.x, Geometry->Position.y, Geometry->Position.z);
+    glPushMatrix();
+    glTranslatef( Geometry->Position.x, Geometry->Position.y, Geometry->Position.z );
+    glRotatef( Geometry->Rotation.x, 1.0, 0.0, 0.0 );
+    glRotatef( Geometry->Rotation.y, 0.0, 1.0, 0.0 );
+    glRotatef( Geometry->Rotation.z, 0.0, 0.0, 1.0 );
 
 /*
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -62,6 +66,7 @@ void CIRCLE::Draw( void )
             glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v3 ]);
         } 
     glEnd();
+    glPopMatrix();
 }
 
 //

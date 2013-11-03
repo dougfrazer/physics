@@ -3,6 +3,18 @@
 
 #include "vector3.h"
 
+class matrix2 {
+public:
+    float x1, x2;
+    float y1, y2;
+
+public:    
+    matrix2();
+    matrix2( float a1, float a2,
+             float b1, float b2 );
+    float det() const;
+};
+
 //******************************************************************************
 // Matrix3 - Three-Dimensional Matrix
 //******************************************************************************
@@ -19,6 +31,12 @@ public:
             float c1, float c2, float c3);
 
     vector3 operator*( const vector3 B ) const;
+    
+    // inverse
+    matrix3 inv() const;
+    
+    // determinent
+    float   det() const;
 };
 
 //******************************************************************************
