@@ -37,6 +37,9 @@ public:
     
     // determinent
     float   det() const;
+
+    // transpose
+    matrix3 t() const;
 };
 
 //******************************************************************************

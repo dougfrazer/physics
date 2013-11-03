@@ -43,25 +43,31 @@ vector3 matrix3::operator*( const vector3 B ) const {
     return v;
 }
 
+matrix3 matrix3::t() const {
+    matrix3 m( x1, y1, z1,
+               x2, y2, z2,
+               x3, y3, z3 );
+    return m;
+}
+
 matrix3 matrix3::inv() const {
     matrix3 m;
     float d = det();
-   
-    m.x1 = d * matrix2( y2, y3, z2, z3 ).det();
-    m.x2 = d * matrix2( x3, x2, z3, z2 ).det();
-    m.x3 = d * matrix2( x2, x3, y2, y3 ).det();
-    m.y1 = d * matrix2( y3, y1, z3, z1 ).det();
-    m.y2 = d * matrix2( x1, x3, z1, z3 ).det();
-    m.y3 = d * matrix2( x3, x1, z3, z1 ).det();
-    m.z1 = d * matrix2( y1, y2, z1, z2 ).det();
-    m.z2 = d * matrix2( x2, x1, y2, y1 ).det();
-    m.z3 = d * matrix2( x1, x2, y1, y2 ).det();
+    m.x1 = matrix2( y2, y3, z2, z3 ).det() / d;
+    m.x2 = matrix2( x3, x2, z3, z2 ).det() / d;
+    m.x3 = matrix2( x2, x3, y2, y3 ).det() / d;
+    m.y1 = matrix2( y3, y1, z3, z1 ).det() / d;
+    m.y2 = matrix2( x1, x3, z1, z3 ).det() / d;
+    m.y3 = matrix2( x3, x1, y3, y1 ).det() / d;
+    m.z1 = matrix2( y1, y2, z1, z2 ).det() / d;
+    m.z2 = matrix2( x2, x1, z2, z1 ).det() / d;
+    m.z3 = matrix2( x1, x2, y1, y2 ).det() / d;
 
     return m;
 }
 
 float matrix3::det() const {
-    return x1*y2*z3 - x1*y3*z2 + x2*y3*z1 + x3*y1*z2 - x3*y2*z1;
+    return x1*y2*z3 - x1*y3*z2 + x2*y3*z1 - x2*y1*z3 + x3*y1*z2 - x3*y2*z1;
 }
 
 //******************************************************************************

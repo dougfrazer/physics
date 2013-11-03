@@ -14,7 +14,8 @@
 
 #define PI 3.14159265
 
-static const vertex InitialPosition = { 0.0, 40.0, 0.0 };
+static const vector3 InitialPosition( 0.0, 40.0, 0.0 );
+static const vector3 InitialRotation( 0.0, 0.0, 0.0 );
 
 CIRCLE::CIRCLE(float r)
 {
@@ -37,6 +38,7 @@ CIRCLE::~CIRCLE()
 void CIRCLE::Reset()
 {
     Geometry->Position = InitialPosition;
+    Geometry->Rotation = InitialRotation;
     Physics->Reset();
 }
 

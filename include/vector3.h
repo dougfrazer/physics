@@ -25,7 +25,9 @@ public:
 
     float    dot  ( const vector3 B ) const;
     vector3  cross( const vector3 B ) const;
-    float    magnitude()              const;
+    vector3  proj ( const vector3 B ) const;
+    float    magnitude( void )        const;
+    vector3  normalize( void )        const;
 };
 
 #endif

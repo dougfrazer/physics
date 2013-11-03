@@ -1,6 +1,8 @@
 #include "vector3.h"
 #include "matrix.h"
 
+#define abs(x) x > 0 ? x : -x
+
 vector3::vector3() { 
     x = 0.0;
     y = 0.0;
@@ -54,4 +56,17 @@ vector3 vector3::cross( const vector3 B ) const {
 }
 float vector3::magnitude() const { 
     return sqrt( x*x + y*y + z*z );
+}
+vector3 vector3::normalize() const {
+    vector3 v;
+    float sum = abs( x + y + z );
+    v.x = x / sum;
+    v.y = y / sum;
+    v.z = z / sum;
+    return v;
+}
+vector3 vector3::proj( const vector3 B ) const {
+    float B_mag = B.magnitude();
+    vector3 v = B * ( dot(B) / (B_mag*B_mag) );
+    return v;
 }

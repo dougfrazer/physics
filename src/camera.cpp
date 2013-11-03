@@ -75,10 +75,10 @@ void Camera_Update( float DeltaTime )
     if( CameraData.Pressed & 1<<RIGHT )     { CameraData.Position.z -= 1.0; CameraData.Look.z -= 1.0; }
     if( CameraData.Pressed & 1<<UP )        { CameraData.Position.y -= 1.0; CameraData.Look.y -= 1.0; }
     if( CameraData.Pressed & 1<<DOWN )      { CameraData.Position.y += 1.0; CameraData.Look.y += 1.0; }
-    if( CameraData.Pressed & 1<<PAN_LEFT )  { CameraData.orbit.z += 3.0; }
-    if( CameraData.Pressed & 1<<PAN_RIGHT ) { CameraData.orbit.z -= 3.0; }
-    if( CameraData.Pressed & 1<<PAN_UP )    { CameraData.orbit.y += 3.0; }
-    if( CameraData.Pressed & 1<<PAN_DOWN )  { CameraData.orbit.y -= 3.0; }
+    if( CameraData.Pressed & 1<<PAN_LEFT )  { CameraData.orbit.y += 3.0; }
+    if( CameraData.Pressed & 1<<PAN_RIGHT ) { CameraData.orbit.y -= 3.0; }
+    if( CameraData.Pressed & 1<<PAN_UP )    { CameraData.orbit.z += 3.0; }
+    if( CameraData.Pressed & 1<<PAN_DOWN )  { CameraData.orbit.z -= 3.0; }
 }
 
 void pressKey(int key, int x, int y)

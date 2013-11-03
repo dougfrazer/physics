@@ -46,6 +46,7 @@ private:
     //   passed in.
     //******************************************************************************
     vector3 Support( const vector3 d, const GEOMETRY* Geo );
+    vector3 Support( const vector3 d, const GEOMETRY* Geo, const vector3 d );
     vector3 Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B );
 
     //******************************************************************************
@@ -59,7 +60,7 @@ private:
     //
     // Note: this function modifies both the list and the direction.
     //******************************************************************************
-    bool Simplex( std::vector<vector3>* list, vector3* d );
+    bool Simplex( std::vector<vector3>* list, vector3* d, const vector3 dest );
 
     vector3 GetCollisionPoint( const GEOMETRY* In );
     vector3 GetCollisionPlaneNormal( const GEOMETRY* In );

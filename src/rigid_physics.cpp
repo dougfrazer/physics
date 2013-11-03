@@ -2,6 +2,9 @@
 #include "rigid_physics.h"
 #include "geometry.h"
 #include "matrix.h"
+#include "plane.h"
+#include <stdlib.h>
+#include <time.h>
 
 static const vector3 g( 0.0, -0.2, 0.0);
 static const float e = 0.15;
@@ -13,6 +16,7 @@ RIGID_PHYSICS::RIGID_PHYSICS( GEOMETRY* Geo )
     : PHYSICS( Geo )
 {
     Reset();
+    srand( time(NULL) );
 }
 //******************************************************************************
 
@@ -25,7 +29,12 @@ RIGID_PHYSICS::~RIGID_PHYSICS()
 //******************************************************************************
 void RIGID_PHYSICS::Reset()
 {
+    static const float MaxRandomRotation = 10.0;
+    w.x = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
+    w.y = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
+    w.z = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
     v = StartingVelocity;
+    *Pending = *Geometry;
 }
 //******************************************************************************
 
@@ -60,7 +69,7 @@ bool RIGID_PHYSICS::DetectCollision( const GEOMETRY* In )
             return false;
         }
         simplex.push_back( a );
-        if( Simplex( &simplex, &d ) ) {
+        if( Simplex( &simplex, &d, origin ) ) {
             return true;
         }
     }
@@ -72,15 +81,18 @@ bool RIGID_PHYSICS::DetectCollision( const GEOMETRY* In )
 void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
 {
     //v = v * (-e);
+    // Temporary: revert back to prevoius position
+    // TODO: move the object as close to the colliding object as possible
+    //       or better yet, move it to where it would be properly after this time step
+    //       after the collision has resolved
     Pending->Position = Geometry->Position; 
-    // for now, just pretend its perfectly elastic
     static const float m = 1.0;
     static const matrix3 I( .4, 0.0, 0.0,
                             0.0, .4, 0.0,
                             0.0, 0.0, .4 );
     static const matrix3 I_inv = I.inv();
     vector3 n = GetCollisionPlaneNormal( In );
-    vector3 r = GetCollisionPoint( In );
+    vector3 r = Geometry->Position - GetCollisionPoint( In );
 
     //-----------------------------------------------------------------------------
     // Simplified impulse response equation (assuming the plane we're colliding with
@@ -89,9 +101,9 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     // v_new = v_old + j*n
     //
     // where:
-    //           -(1 - e)v dot n
-    // j =  -----------------------
-    //      1/m +  ( (r x n x r) / I ) dot n
+    //              -(1 - e)v dot n
+    // j =  --------------------------------------
+    //      1/m +  ( (I^-1 * (r x n)) x r) ) dot n
     //
     // j = magnitude of impulse
     // e = elasticity (0.0 - 1.0)
@@ -102,7 +114,7 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     // I = moment of inertia
     //----------------------------------------------------------------------------
     float j = ( v * -(1.0-e) ).dot( n );
-    j /= ( 1/m + ( ( I_inv * ( r.cross(n) ) ).cross(r) ).dot( n ) );
+    j /= ( 1/m + ( ( I_inv * r.cross(n) ).cross(r) ).dot( n ) );
     v = n * j;
     w = r.cross(n) * j;
 }
@@ -111,10 +123,15 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
 //******************************************************************************
 vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo )
 {
+    return Support( d, Geo, Geo->Position );
+}
+//******************************************************************************
+vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo, const vector3 s )
+{
     float dot_product = -std::numeric_limits<float>::infinity() ;
     vector3 closest;
     for( int i = 0; i < Geo->NumVertices; i++ ) {
-        vector3 t = vector3(Geo->VertexList[i]) + vector3(Geo->Position);
+        vector3 t = vector3(Geo->VertexList[i]) + s;
         float c = d.dot( t );
         if( c >= dot_product ) {
             dot_product = c;
@@ -137,8 +154,22 @@ vector3 RIGID_PHYSICS::GetCollisionPlaneNormal( const GEOMETRY* In )
 //******************************************************************************
 vector3 RIGID_PHYSICS::GetCollisionPoint( const GEOMETRY* In )
 {
-    vector3 v( 1.0, 0.0, 0.0 );
+    vector3 v(10.0, 0.0, 10.0);
     return v;
+/*
+    std::vector<vector3> simplex;
+    vector3 start( Geometry->Position );
+    simplex.push_back( start ); 
+    vector3 d = Geometry->Position + v;
+    while( simplex.size() < 3 ) {
+        vector3 a = Support( d, Geometry );
+        assert( d.dot( a ) > 0 );
+        simplex.push_back( a );
+        Simplex( &simplex, &d, Geometry->Position + v );
+    }
+    plane p( simplex.at(0), simplex.at(1), simplex.at(2) );
+    return p.intersection( origin, v );
+*/
 }
 //******************************************************************************
 
@@ -155,7 +186,7 @@ vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* A, const GEOMET
 //******************************************************************************
 
 //******************************************************************************
-bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d )
+bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d, const vector3 dest )
 {
     if( simplex->size() == 2 ) {
         // we have a line:
@@ -172,7 +203,7 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d )
         vector3 a = simplex->at(1);
         vector3 b = simplex->at(0);
         vector3 ab = b - a;
-        vector3 ao = -a;
+        vector3 ao = dest - a;
         if( ab.dot( ao ) > 0 ) {
             *d = ab.cross(ao).cross(ab);
         } else { 
@@ -187,7 +218,7 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d )
         vector3 ab = b - a;
         vector3 ac = c - a;
         vector3 bc = c - b;
-        vector3 ao = -a;
+        vector3 ao = dest - a;
         if( ab.dot( ao ) > 0 ) {
            if( bc.dot( ao ) > 0 ) {
                 *d = ab.cross(ao).cross(ab);
@@ -217,7 +248,7 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d )
         vector3 ab = b - a;
         vector3 ac = c - a;
         vector3 ad = d - a;
-        vector3 ao = -a;
+        vector3 ao = dest - a;
         if( ab.dot( ao ) > 0 && ac.dot( ao ) > 0 && ad.dot( ao ) > 0 ) {
             return true;
         } else {
