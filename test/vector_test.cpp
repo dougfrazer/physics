@@ -79,7 +79,20 @@ class TEST_NORMALIZE : public TEST
     public: TEST_NORMALIZE() : TEST( "Normalize a 3d vector to unit length" ) {}
     protected: bool RunInternal()
     {
-        return false;
+        vector3 a_n = a.normalize();
+        vector3 b_n = b.normalize();
+
+        vector3 a_calc( 0.294684, 0.442026, -0.847216 );
+        vector3 b_calc( -0.242486, 0.0202072, 0.969944 );
+        
+        vector3 a_zero = a_n - a_calc;
+        vector3 b_zero = b_n - b_calc;
+        return a_zero.x < 0.0001 && a_zero.x > -0.0001 &&
+               a_zero.y < 0.0001 && a_zero.y > -0.0001 &&
+               a_zero.z < 0.0001 && a_zero.z > -0.0001 &&
+               b_zero.x < 0.0001 && b_zero.x > -0.0001 &&
+               b_zero.y < 0.0001 && b_zero.y > -0.0001 &&
+               b_zero.z < 0.0001 && b_zero.z > -0.0001;
     }
 };
 static TEST_NORMALIZE TestNormalize;
@@ -89,7 +102,12 @@ class TEST_PROJECT : public TEST
     public: TEST_PROJECT() : TEST( "Get the projection of one vector onto another" ) {}
     protected: bool RunInternal()
     {
-        return false;
+        vector3 p = a.proj(b);
+        vector3 answer( 5.821, -0.485, -23.285 );
+        vector3 p_zero = p - answer; 
+        return p_zero.x < 0.001 && p_zero.x > -0.001 &&
+               p_zero.y < 0.001 && p_zero.y > -0.001 &&
+               p_zero.z < 0.001 && p_zero.z > -0.001;
     }
 };
 static TEST_PROJECT TestProject;

@@ -59,10 +59,10 @@ float vector3::magnitude() const {
 }
 vector3 vector3::normalize() const {
     vector3 v;
-    float sum = abs( x + y + z );
-    v.x = x / sum;
-    v.y = y / sum;
-    v.z = z / sum;
+    float m = magnitude();
+    v.x = x / m;
+    v.y = y / m;
+    v.z = z / m;
     return v;
 }
 vector3 vector3::proj( const vector3 B ) const {
