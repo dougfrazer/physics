@@ -6,8 +6,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define min( a, b ) a < b ? a : b
+
 static const vector3 g( 0.0, -0.2, 0.0);
-static const float e = 0.15;
+static const float e = 2.5;
 static const vector3 StartingVelocity( 0.0, 0.0, 0.0 );
 static const vector3 origin;
 
@@ -16,7 +18,6 @@ RIGID_PHYSICS::RIGID_PHYSICS( GEOMETRY* Geo )
     : PHYSICS( Geo )
 {
     Reset();
-    srand( time(NULL) );
 }
 //******************************************************************************
 
@@ -43,6 +44,9 @@ void RIGID_PHYSICS::Update( const float DeltaTime )
 {
     // update linear velocity due to gravity
     v = v + g*DeltaTime;
+
+    // decay the rotation (approximation of air resistance, just decay linearly)
+    w = w * 0.999;
 
     // Update position due to linear velocity
     Pending->Position = Pending->Position + v * DeltaTime;
@@ -88,11 +92,11 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     Pending->Position = Geometry->Position; 
     static const float m = 1.0;
     static const matrix3 I( .4, 0.0, 0.0,
-                            0.0, .4, 0.0,
+                            0.0, 1.0, 0.0,
                             0.0, 0.0, .4 );
     static const matrix3 I_inv = I.inv();
     vector3 n = GetCollisionPlaneNormal( In );
-    vector3 r = Geometry->Position - GetCollisionPoint( In );
+    vector3 r = GetCollisionPoint( In ) - Geometry->Position;
 
     //-----------------------------------------------------------------------------
     // Simplified impulse response equation (assuming the plane we're colliding with
@@ -113,8 +117,12 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     // r = vector3 to point of impact from center of mass
     // I = moment of inertia
     //----------------------------------------------------------------------------
-    float j = ( v * -(1.0-e) ).dot( n );
-    j /= ( 1/m + ( ( I_inv * r.cross(n) ).cross(r) ).dot( n ) );
+    vector3 angularVelocity = I * w;
+    vector3 velocityAtPoint = v + angularVelocity;
+    vector3 angularMomentum = I * r.cross(n);
+    float i = -( 1.0 + e ) * velocityAtPoint.dot( n );
+    float k = 1/m + angularMomentum.cross( r ).dot( n );
+    float j = i / k;
     v = n * j;
     w = r.cross(n) * j;
 }
@@ -146,7 +154,7 @@ vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo, const vect
 //******************************************************************************
 vector3 RIGID_PHYSICS::GetCollisionPlaneNormal( const GEOMETRY* In )
 {
-    vector3 v(0.0, 1.0, 0.0);
+    vector3 v(0.0, -1.0, 0.0);
     return v;
 }
 //******************************************************************************
@@ -154,22 +162,8 @@ vector3 RIGID_PHYSICS::GetCollisionPlaneNormal( const GEOMETRY* In )
 //******************************************************************************
 vector3 RIGID_PHYSICS::GetCollisionPoint( const GEOMETRY* In )
 {
-    vector3 v(10.0, 0.0, 10.0);
-    return v;
-/*
-    std::vector<vector3> simplex;
-    vector3 start( Geometry->Position );
-    simplex.push_back( start ); 
-    vector3 d = Geometry->Position + v;
-    while( simplex.size() < 3 ) {
-        vector3 a = Support( d, Geometry );
-        assert( d.dot( a ) > 0 );
-        simplex.push_back( a );
-        Simplex( &simplex, &d, Geometry->Position + v );
-    }
-    plane p( simplex.at(0), simplex.at(1), simplex.at(2) );
-    return p.intersection( origin, v );
-*/
+    vector3 a = Support( v, Geometry );
+    return a;
 }
 //******************************************************************************
 
@@ -248,8 +242,16 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d, const ve
         vector3 ab = b - a;
         vector3 ac = c - a;
         vector3 ad = d - a;
+        vector3 bc = b - c;
+        vector3 bd = b - d;
+        vector3 cd = c - d;
         vector3 ao = dest - a;
-        if( ab.dot( ao ) > 0 && ac.dot( ao ) > 0 && ad.dot( ao ) > 0 ) {
+        if( ab.dot( ao ) > 0 && 
+            ac.dot( ao ) > 0 && 
+            ad.dot( ao ) > 0 && 
+            bc.dot( ao ) > 0 && 
+            bd.dot( ao ) > 0 && 
+            cd.dot( ao ) > 0 ) {
             return true;
         } else {
             simplex->pop_back();
