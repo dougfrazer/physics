@@ -7,12 +7,20 @@
 
 #if defined( _WIN32 ) || defined( _WIN64 )
 #include <windows.h>
+#else
+#include <sys/time.h>
 #endif
 
-#include "time.h"
 #include "world.h"
 #include "camera.h"
 #include "common.h"
+
+#if defined(_WIN32) || defined(_WIN64)
+static LARGE_INTEGER f;
+static LARGE_INTEGER lastTime;
+#else
+static timeval lastTime;
+#endif
 
 //*****************************************************************************
 // Forward Declarations
@@ -42,22 +50,20 @@ int main( int argc, char* argv )
 //*****************************************************************************
 // Private Interface
 //*****************************************************************************
-#if defined(_WIN32) || defined(_WIN64)
-static LARGE_INTEGER f;
-static LARGE_INTEGER lastTime;
-#endif
 
 static float Main_GetDeltaTime()
 {
 #if defined(_WIN32) || defined(_WIN64)
 	LARGE_INTEGER t;
-	QueryPerformanceFrequency(&f);
 	QueryPerformanceCounter(&t);
 	float DeltaTime = ( t.QuadPart - lastTime.QuadPart ) * 1000.0 / f.QuadPart;
 	lastTime = t;
 #else
-	 // TODO: calculate an actual time step
-	float DeltaTime = 1/60.0;
+    timeval t;
+    gettimeofday(&t, NULL);
+    float DeltaTime = t.tv_sec - lastTime.tv_sec;
+    DeltaTime += t.tv_usec - lastTime.tv_usec / 1000;
+    lastTime = t;
 #endif
 
     return DeltaTime;
@@ -124,6 +130,12 @@ static void Main_Init( int argc, char* argv )
     Main_InitGlut( argc, argv );
     World_Init();
     Camera_Init();
+#if defined(_WIN32) || defined(_WIN64)
+	QueryPerformanceFrequency(&f);
+	QueryPerformanceCounter(&lastTime);
+#else
+    gettimeofday(&lastTime, NULL);
+#endif
 }
 //*****************************************************************************
 static void Main_Deinit()

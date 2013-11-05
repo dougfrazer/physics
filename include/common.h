@@ -36,6 +36,6 @@ public:
 
 #define LinearInterpolate(x, x0, x1, y0, y1) ( y0+ ( (float)(y1-y0) * ( (float)(x-x0)/(float)(x1-x0) ) ) )
 #define clamp( min, x, max ) x < min ? min : x > max ? max : x
-#define min(a,b) a < b ? a : b
-#define max(a,b) a > b ? a : b
+//#define min(a,b) a < b ? a : b
+//#define max(a,b) a > b ? a : b
 #endif
