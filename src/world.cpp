@@ -74,3 +74,8 @@ void World_Pause()
 {
     WorldData.Paused = WorldData.Paused ? false : true;
 }
+
+bool World_GetPaused()
+{
+	return WorldData.Paused;
+}

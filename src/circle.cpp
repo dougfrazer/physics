@@ -1,10 +1,12 @@
 #include "circle.h"
 #include "geometry.h"
 #include "rigid_physics.h"
+#include "world.h" // temporary
 
 #include "stdlib.h"
 #include "math.h"
 #include "string.h"
+
 
 #if __APPLE__
 #include <GLUT/glut.h>
@@ -16,6 +18,8 @@
 
 static const vector3 InitialPosition( 0.0, 40.0, 0.0 );
 static const vector3 InitialRotation( 0.0, 0.0, 0.0 );
+static bool    CollisionFound;
+static vector3 Collision;
 
 CIRCLE::CIRCLE(float r)
 {
@@ -44,11 +48,22 @@ void CIRCLE::Reset()
 
 void CIRCLE::Update( float DeltaTime )
 {
+	if( !World_GetPaused() ) {
+		CollisionFound = false;
+	}	
+}
+
+void CIRCLE::DrawCollision( vector3 c )
+{
+	CollisionFound = true;
+	Collision = c;
+
 }
 
 void CIRCLE::Draw( void )
 {
     glPushMatrix();
+	glPushAttrib(GL_CURRENT_BIT);
     glTranslatef( Geometry->Position.x, Geometry->Position.y, Geometry->Position.z );
     glRotatef( Geometry->Rotation.x, 1.0, 0.0, 0.0 );
     glRotatef( Geometry->Rotation.y, 0.0, 1.0, 0.0 );
@@ -60,7 +75,10 @@ void CIRCLE::Draw( void )
     glDrawArrays(GL_LINES, 0, Geometry->NumVertices);
     glDisableClientState(GL_VERTEX_ARRAY);
 */
-
+	glColor3f(1.0,0.0,0.0);
+	glutWireSphere( 1, 5, 5 );
+	
+	glColor3f(0.0,0.0,1.0);
     glBegin( GL_LINE_STRIP );
         for( int i = 0; i < Geometry->NumFaces; i++ ) {
             glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v1 ]);
@@ -68,6 +86,16 @@ void CIRCLE::Draw( void )
             glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v3 ]);
         } 
     glEnd();
+
+	if( CollisionFound ) {
+		glColor3f(0.0,1.0,0.0);
+		glBegin( GL_LINES );
+			glVertex3f( 0,0,0 );
+			glVertex3fv( (GLfloat*)&Collision );
+		glEnd();
+	}
+	
+	glPopAttrib();
     glPopMatrix();
 }
 

@@ -3,7 +3,7 @@
 
 #include "object.h"
 #include "common.h"
-
+#include "vector3.h"
 class CIRCLE : public OBJECT
 {
 public:
@@ -13,10 +13,15 @@ public:
     void Update    ( float DeltaTime );
     void Draw      ( void );
     void Reset     ( void );
+	
 private:
     float       radius;
 
     void CreateIcosahadron(float r, GEOMETRY* Geometry, int subdivision);
+
+// TEMPORARY
+public:
+	static void    DrawCollision( vector3 c );
 };
 
 #endif

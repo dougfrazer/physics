@@ -12,6 +12,7 @@
 #include "time.h"
 #include "world.h"
 #include "camera.h"
+#include "common.h"
 
 //*****************************************************************************
 // Forward Declarations
@@ -90,7 +91,6 @@ static void Main_Reshape(int width, int height)
     glMatrixMode(GL_MODELVIEW);
 }
 //*****************************************************************************
-#define clamp( min, x, max ) x < min ? min : x > max ? max : x
 static void Main_Idle()
 {
     float DeltaTime = clamp( 0.001, Main_GetDeltaTime(), 0.01666 );

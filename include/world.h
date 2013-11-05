@@ -18,6 +18,9 @@ void World_Update    ( float DeltaTime );
 // Utility functions
 void World_Reset     ( void );
 void World_Pause     ( void );
+bool World_GetPaused ( void );
 
 void World_AddObject    ( OBJECT* o );
 void World_RemoveObject ( OBJECT* o );
+
+

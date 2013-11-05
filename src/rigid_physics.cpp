@@ -3,10 +3,12 @@
 #include "geometry.h"
 #include "matrix.h"
 #include "plane.h"
+#include "common.h"
 #include <stdlib.h>
 #include <time.h>
 
-#define min( a, b ) a < b ? a : b
+#include "circle.h" // temporary
+#include "world.h"
 
 static const vector3 g( 0.0, -9.8, 0.0);
 static const float e = 0.80;
@@ -97,7 +99,9 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     static const matrix3 I_inv = I.inv();
     vector3 n = GetCollisionPlaneNormal( In );
     vector3 r = GetCollisionPoint( In ) - Geometry->Position;
-
+	CIRCLE::DrawCollision( r );
+	World_Pause();
+	
     //-----------------------------------------------------------------------------
     // Simplified impulse response equation (assuming the plane we're colliding with
     // has infinite mass and zero velocity)
@@ -105,7 +109,7 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     // v_new = v_old + j*n
     //
     // where:
-    //              -(1 - e)v dot n
+    //              -(1 + e)v dot n
     // j =  --------------------------------------
     //      1/m +  ( (I^-1 * (r x n)) x r) ) dot n
     //
@@ -114,17 +118,17 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     // v = current velocity
     // n = normal to the plane of impact
     // m = mass
-    // r = vector3 to point of impact from center of mass
+    // r = vector to point of impact from center of mass
     // I = moment of inertia
     //----------------------------------------------------------------------------
-    vector3 angularVelocity = I * w;
+    vector3 angularVelocity = I_inv * w;
     vector3 velocityAtPoint = v + angularVelocity;
-    vector3 angularMomentum = I * r.cross(n);
+    vector3 angularMomentum = I_inv * r.cross(n);
     float i = -( 1.0 + e ) * velocityAtPoint.dot( n );
     float k = 1/m + angularMomentum.cross( r ).dot( n );
     float j = i / k;
-    v = n * j;
-    w = r.cross(n) * j;
+	v = v + n * ( j / m );
+    w = w + angularMomentum * j;
 }
 //******************************************************************************
 
@@ -154,7 +158,7 @@ vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo, const vect
 //******************************************************************************
 vector3 RIGID_PHYSICS::GetCollisionPlaneNormal( const GEOMETRY* In )
 {
-    vector3 v(0.0, -1.0, 0.0);
+    vector3 v(0.0, 1.0, 0.0);
     return v;
 }
 //******************************************************************************
