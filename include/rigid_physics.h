@@ -46,7 +46,7 @@ private:
     //   passed in.
     //******************************************************************************
     vector3 Support( const vector3 d, const GEOMETRY* Geo );
-    vector3 Support( const vector3 d, const GEOMETRY* Geo, const vector3 d );
+    vector3 Support( const vector3 d, const GEOMETRY* Geo, const vector3 dir );
     vector3 Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B );
 
     //******************************************************************************
@@ -58,6 +58,7 @@ private:
     //   the origin.  If it is part of the tetrahedron, we leave it, and update our search direction
     //   towards the origin but in the direction perpendicular to what we just added.
     //
+	// Note: this function will assume the last point in the list be the point we just added
     // Note: this function modifies both the list and the direction.
     //******************************************************************************
     bool Simplex( std::vector<vector3>* list, vector3* d, const vector3 dest );

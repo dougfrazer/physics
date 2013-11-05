@@ -8,8 +8,8 @@
 
 #define min( a, b ) a < b ? a : b
 
-static const vector3 g( 0.0, -0.2, 0.0);
-static const float e = 2.5;
+static const vector3 g( 0.0, -9.8, 0.0);
+static const float e = 0.80;
 static const vector3 StartingVelocity( 0.0, 0.0, 0.0 );
 static const vector3 origin;
 
@@ -46,7 +46,7 @@ void RIGID_PHYSICS::Update( const float DeltaTime )
     v = v + g*DeltaTime;
 
     // decay the rotation (approximation of air resistance, just decay linearly)
-    w = w * 0.999;
+ //   w = w * 0.999;
 
     // Update position due to linear velocity
     Pending->Position = Pending->Position + v * DeltaTime;
@@ -90,7 +90,7 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     //       or better yet, move it to where it would be properly after this time step
     //       after the collision has resolved
     Pending->Position = Geometry->Position; 
-    static const float m = 1.0;
+    static const float m = 10.0;
     static const matrix3 I( .4, 0.0, 0.0,
                             0.0, 1.0, 0.0,
                             0.0, 0.0, .4 );
@@ -180,28 +180,17 @@ vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* A, const GEOMET
 //******************************************************************************
 
 //******************************************************************************
-bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d, const vector3 dest )
+bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* dir, const vector3 dest )
 {
     if( simplex->size() == 2 ) {
-        // we have a line:
-        // figure out which point is closer to the origin
-        
-        // NOTE: A is the vector3 we just added, and are testing against
-        // AB represents the vector3 from point A to B
-        // AO represents the vector3 from A to the origin
-        // if the dot product is positive, there is some projection of AB on AO.
-        // this tells us that the vector3 AB is part of a tetrahedron that encloses the origin.
-        // therefore, we want to keep A, and continue the algorithm to find a third point
-        // (also update direction to point towards the origin).
-        // otherwise (if dot product is less than zero) we want to pop A and find another point
         vector3 a = simplex->at(1);
         vector3 b = simplex->at(0);
         vector3 ab = b - a;
         vector3 ao = dest - a;
         if( ab.dot( ao ) > 0 ) {
-            *d = ab.cross(ao).cross(ab);
+            *dir = ab.cross(ao).cross(ab);
         } else { 
-            *d = ao;
+            *dir = ao;
             simplex->pop_back();
         }
     } else if( simplex->size() == 3 ) {
@@ -209,29 +198,53 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d, const ve
         vector3 a = simplex->at(2);
         vector3 b = simplex->at(1);
         vector3 c = simplex->at(0);
-        vector3 ab = b - a;
-        vector3 ac = c - a;
-        vector3 bc = c - b;
-        vector3 ao = dest - a;
-        if( ab.dot( ao ) > 0 ) {
-           if( bc.dot( ao ) > 0 ) {
-                *d = ab.cross(ao).cross(ab);
-            } else {
-                *d = ao;
-                simplex->pop_back();
-            } 
-        } else if( ac.dot( ao ) > 0 ) {
-            if( -bc.dot( ao ) > 0 ) {
-                *d = ac.cross(ao).cross(ac);
-            } else {
-                *d = ao;
-                simplex->pop_back();
-            }
-        } else {
-            *d = ao;
-            simplex->pop_back();
-        }
+		simplex->clear();
+        vector3 ab  = b - a;
+        vector3 ac  = c - a;
+		vector3 abc = ab.cross( ac );
+        vector3 ao  = dest - a;
 
+		// first check to see if the point is above AC
+        if( abc.cross(ac).dot( ao ) > 0 ) {
+           if( ac.dot( ao ) > 0 ) {
+                *dir = ac.cross(ao).cross(ac);
+				simplex->push_back(a);
+				simplex->push_back(c);
+            } else if( ab.dot(ao) ) {
+				*dir = ab.cross(ao).cross(ab);
+				simplex->push_back(a);
+				simplex->push_back(b);
+			} else {
+                *dir = ao;
+                simplex->push_back(a);
+            }
+		// then check to see if the point is below AB
+        } else if( ab.cross(abc).dot( ao ) > 0 ) {
+			if( ab.dot( ao ) > 0 ) {
+				*dir = ab.cross(ao).cross(ab);
+				simplex->push_back(a);
+				simplex->push_back(b);
+			} else if( ab.dot(ao) ) {
+				*dir = ac.cross(ao).cross(ac);
+				simplex->push_back(a);
+				simplex->push_back(c);
+			} else {
+				*dir = ao;
+				simplex->push_back(a);
+			}
+		// OK, the point is necessarily below AC and above AB (so it is within the triangle),
+		// just need to figure out which direction to search
+        } else if( abc.dot(ao) > 0 ) {
+            *dir = abc;
+			simplex->push_back(a);
+			simplex->push_back(b);
+			simplex->push_back(c);
+        } else {
+			*dir = -abc;
+			simplex->push_back(a);
+			simplex->push_back(c);
+			simplex->push_back(b);
+		}
     } else if( simplex->size() == 4 ) {
         // we have a tetrahedron
         // return whether or not the origin is enclosed in the tetrahedron
@@ -239,23 +252,32 @@ bool RIGID_PHYSICS::Simplex( std::vector<vector3>* simplex, vector3* d, const ve
         vector3 b = simplex->at(2);
         vector3 c = simplex->at(1);
         vector3 d = simplex->at(0);
+		simplex->clear();
         vector3 ab = b - a;
         vector3 ac = c - a;
         vector3 ad = d - a;
-        vector3 bc = b - c;
-        vector3 bd = b - d;
-        vector3 cd = c - d;
-        vector3 ao = dest - a;
-        if( ab.dot( ao ) > 0 && 
-            ac.dot( ao ) > 0 && 
-            ad.dot( ao ) > 0 && 
-            bc.dot( ao ) > 0 && 
-            bd.dot( ao ) > 0 && 
-            cd.dot( ao ) > 0 ) {
-            return true;
-        } else {
-            simplex->pop_back();
-        }
+		vector3 ao = dest - a;
+		vector3 abd = ab.cross(ad);
+		vector3 adc = ad.cross(ac);
+		vector3 acb = ac.cross(ab);
+		if( abd.dot( ao ) > 0 ) {
+			*dir = abd;
+			simplex->push_back(a);
+			simplex->push_back(b);
+			simplex->push_back(d);
+		} else if( adc.dot( ao ) > 0 ) {
+			*dir = adc;
+			simplex->push_back(a);
+			simplex->push_back(d);
+			simplex->push_back(c);
+		} else if( acb.dot( ao ) > 0 ) {
+			*dir = acb;
+			simplex->push_back(a);
+			simplex->push_back(c);
+			simplex->push_back(b);
+		} else {
+			return true;
+		}
     } else {
         assert(false);  // should not be possible
     }

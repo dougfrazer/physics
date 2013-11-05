@@ -8,7 +8,7 @@
 
 #if __APPLE__
 #include <GLUT/glut.h>
-#elif __LINUX__
+#else
 #include <GL/glut.h>
 #endif
 

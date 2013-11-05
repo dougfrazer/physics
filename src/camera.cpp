@@ -5,7 +5,7 @@
 #include "common.h"
 #if __APPLE__
 #include <GLUT/glut.h>
-#elif __LINUX__
+#else
 #include <GL/glut.h>
 #endif
 
@@ -14,10 +14,10 @@ static const vector3 StartingLook    ( 0.0 , 15.0, 0.0  );
 static const vector3 StartingOrbit   ( 0.0 , 0.0 , 0.0  );
 
 static struct {
-    vector3       Position;
-    vector3       Look;
+    vector3      Position;
+    vector3      Look;
     float        Degrees;
-    vector3       orbit;
+    vector3      orbit;
     unsigned int Pressed;
 } CameraData;
 
@@ -69,16 +69,16 @@ void Camera_Draw( void )
 
 void Camera_Update( float DeltaTime )
 {
-    if( CameraData.Pressed & 1<<FORWARD )   { CameraData.Position.x -= 1.0; CameraData.Look.x -= 1.0; }
-    if( CameraData.Pressed & 1<<BACK )      { CameraData.Position.x += 1.0; CameraData.Look.x += 1.0; }
-    if( CameraData.Pressed & 1<<LEFT )      { CameraData.Position.z += 1.0; CameraData.Look.z += 1.0; }
-    if( CameraData.Pressed & 1<<RIGHT )     { CameraData.Position.z -= 1.0; CameraData.Look.z -= 1.0; }
-    if( CameraData.Pressed & 1<<UP )        { CameraData.Position.y -= 1.0; CameraData.Look.y -= 1.0; }
-    if( CameraData.Pressed & 1<<DOWN )      { CameraData.Position.y += 1.0; CameraData.Look.y += 1.0; }
-    if( CameraData.Pressed & 1<<PAN_LEFT )  { CameraData.orbit.y += 3.0; }
-    if( CameraData.Pressed & 1<<PAN_RIGHT ) { CameraData.orbit.y -= 3.0; }
-    if( CameraData.Pressed & 1<<PAN_UP )    { CameraData.orbit.z += 3.0; }
-    if( CameraData.Pressed & 1<<PAN_DOWN )  { CameraData.orbit.z -= 3.0; }
+    if( CameraData.Pressed & 1<<FORWARD )   { CameraData.Position.x -= 0.1; CameraData.Look.x -= 0.1; }
+    if( CameraData.Pressed & 1<<BACK )      { CameraData.Position.x += 0.1; CameraData.Look.x += 0.1; }
+    if( CameraData.Pressed & 1<<LEFT )      { CameraData.Position.z += 0.1; CameraData.Look.z += 0.1; }
+    if( CameraData.Pressed & 1<<RIGHT )     { CameraData.Position.z -= 0.1; CameraData.Look.z -= 0.1; }
+    if( CameraData.Pressed & 1<<UP )        { CameraData.Position.y -= 0.1; CameraData.Look.y -= 0.1; }
+    if( CameraData.Pressed & 1<<DOWN )      { CameraData.Position.y += 0.1; CameraData.Look.y += 0.1; }
+    if( CameraData.Pressed & 1<<PAN_LEFT )  { CameraData.orbit.y += 0.1; }
+    if( CameraData.Pressed & 1<<PAN_RIGHT ) { CameraData.orbit.y -= 0.1; }
+    if( CameraData.Pressed & 1<<PAN_UP )    { CameraData.orbit.z += 0.1; }
+    if( CameraData.Pressed & 1<<PAN_DOWN )  { CameraData.orbit.z -= 0.1; }
 }
 
 void pressKey(int key, int x, int y)

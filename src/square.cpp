@@ -2,10 +2,10 @@
 #include "geometry.h"
 #include "stdlib.h"
 #include "static_physics.h"
-#if __LINUX__
-#include <GL/glut.h>
-#elif __APPLE__
+#if __APPLE__
 #include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
 #endif
 
 
