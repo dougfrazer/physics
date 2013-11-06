@@ -1,5 +1,6 @@
 #include "physics.h"
 #include "vector3.h"
+#include "matrix.h"
 #include <vector>
 
 class RIGID_PHYSICS : public PHYSICS
@@ -46,7 +47,7 @@ private:
     //   passed in.
     //******************************************************************************
     vector3 Support( const vector3 d, const GEOMETRY* Geo );
-    vector3 Support( const vector3 d, const GEOMETRY* Geo, const vector3 dir );
+    vector3 Support( const vector3 d, const GEOMETRY* Geo, const matrix4* m );
     vector3 Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B );
 
     //******************************************************************************

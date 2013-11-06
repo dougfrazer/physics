@@ -13,6 +13,7 @@
 #include "world.h"
 #include "camera.h"
 #include "common.h"
+#include "debug.h"
 
 //*****************************************************************************
 // Forward Declarations
@@ -76,6 +77,7 @@ static void Main_Draw()
 
     Camera_Draw();
     World_Draw();
+	Debug_Draw();
 
     glutSwapBuffers();
 }

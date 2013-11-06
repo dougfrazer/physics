@@ -1,8 +1,6 @@
 #include "vector3.h"
 #include "matrix.h"
 
-#define abs(x) x > 0 ? x : -x
-
 vector3::vector3() { 
     x = 0.0;
     y = 0.0;
@@ -12,6 +10,11 @@ vector3::vector3(const vertex v) {
     x = v.x;
     y = v.y;
     z = v.z;
+}
+vector3::vector3(const vector4 v) { 
+	x = v.x;
+	y = v.y;
+	z = v.z;
 }
 vector3::vector3(const float _x, const float _y, const float _z) {
     x = _x;
@@ -46,6 +49,13 @@ vector3 vector3::operator*( const float s ) const {
     v.y = y * s;
     v.z = z * s;
     return v;
+}
+vector3 vector3::operator/( const float s ) const {
+	vector3 v;
+	v.x = x / s;
+	v.y = y / s;
+	v.z = z / s;
+	return v;
 }
 
 float vector3::dot( const vector3 B ) const { 

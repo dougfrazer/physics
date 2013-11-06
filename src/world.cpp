@@ -50,9 +50,7 @@ void World_Update( float DeltaTime )
     if( WorldData.Paused ) {
         return;
     }
-
-    Physics_Update( DeltaTime );
-
+	Physics_Update( DeltaTime );
     std::list<OBJECT*>::iterator it;
     for( it = Objects.begin(); it != Objects.end(); it++ ) {
         OBJECT* o = *it;

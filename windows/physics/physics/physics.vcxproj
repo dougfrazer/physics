@@ -66,18 +66,22 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\camera.cpp" />
     <ClCompile Include="..\..\..\src\circle.cpp" />
+    <ClCompile Include="..\..\..\src\debug.cpp" />
     <ClCompile Include="..\..\..\src\main.cpp" />
     <ClCompile Include="..\..\..\src\matrix.cpp" />
     <ClCompile Include="..\..\..\src\physics.cpp" />
     <ClCompile Include="..\..\..\src\rigid_physics.cpp" />
     <ClCompile Include="..\..\..\src\square.cpp" />
     <ClCompile Include="..\..\..\src\vector3.cpp" />
+    <ClCompile Include="..\..\..\src\vector4.cpp" />
     <ClCompile Include="..\..\..\src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\camera.h" />
     <ClInclude Include="..\..\..\include\circle.h" />
+    <ClInclude Include="..\..\..\include\color.h" />
     <ClInclude Include="..\..\..\include\common.h" />
+    <ClInclude Include="..\..\..\include\debug.h" />
     <ClInclude Include="..\..\..\include\geometry.h" />
     <ClInclude Include="..\..\..\include\matrix.h" />
     <ClInclude Include="..\..\..\include\object.h" />
@@ -87,6 +91,7 @@
     <ClInclude Include="..\..\..\include\square.h" />
     <ClInclude Include="..\..\..\include\static_physics.h" />
     <ClInclude Include="..\..\..\include\vector3.h" />
+    <ClInclude Include="..\..\..\include\vector4.h" />
     <ClInclude Include="..\..\..\include\world.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

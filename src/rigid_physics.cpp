@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "circle.h" // temporary
-#include "world.h"
+#include "debug.h" // temporary
+#include "world.h" // temporary
 
 static const vector3 g( 0.0, -9.8, 0.0);
 static const float e = 0.80;
@@ -99,8 +99,6 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     static const matrix3 I_inv = I.inv();
     vector3 n = GetCollisionPlaneNormal( In );
     vector3 r = GetCollisionPoint( In ) - Geometry->Position;
-	CIRCLE::DrawCollision( r );
-	World_Pause();
 	
     //-----------------------------------------------------------------------------
     // Simplified impulse response equation (assuming the plane we're colliding with
@@ -129,21 +127,35 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     float j = i / k;
 	v = v + n * ( j / m );
     w = w + angularMomentum * j;
+
+	vector3 CollisionPoint = GetCollisionPoint( In );
+	Debug_DrawLine( CollisionPoint, CollisionPoint + velocityAtPoint, Color::Maroon );
+	Debug_DrawLine( Geometry->Position, v,                            Color::Navy );
+	Debug_DrawLine( Geometry->Position, w,                            Color::Red );
+	Debug_DrawLine( Geometry->Position, CollisionPoint,               Color::Green );
+	Debug_DrawLine( vector3(0,0,0),     n,                            Color::Orange );
+	if( !World_GetPaused() ) {
+		World_Pause();
+	}
 }
 //******************************************************************************
 
 //******************************************************************************
 vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo )
 {
-    return Support( d, Geo, Geo->Position );
+	matrix4 transform;
+	transform.translate( Geo->Position );
+	transform.rotate( Geo->Rotation );
+    return Support( d, Geo, &transform );
 }
 //******************************************************************************
-vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo, const vector3 s )
+vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo, const matrix4* m )
 {
     float dot_product = -std::numeric_limits<float>::infinity() ;
     vector3 closest;
     for( int i = 0; i < Geo->NumVertices; i++ ) {
-        vector3 t = vector3(Geo->VertexList[i]) + s;
+        vector3 t = vector3(*m * vector4(Geo->VertexList[i]));
+
         float c = d.dot( t );
         if( c >= dot_product ) {
             dot_product = c;
