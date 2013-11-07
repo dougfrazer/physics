@@ -30,7 +30,8 @@ void Debug_Draw()
 	glPushMatrix();
 	glPushAttrib(GL_CURRENT_BIT);
 
-	for(int i = 0; i < debugLines.size(); i++ ) {
+	int size = debugLines.size();
+	for(int i = 0; i < size; i++ ) {
 		line l = debugLines.at(i);
 		glColor3f( l.c.GetR(), l.c.GetG(), l.c.GetB() );
 		glBegin( GL_LINES );

@@ -11,7 +11,7 @@
 #include "world.h" // temporary
 
 static const vector3 g( 0.0, -9.8, 0.0);
-static const float e = 0.80;
+static const float e = 0.85;
 static const vector3 StartingVelocity( 0.0, 0.0, 0.0 );
 static const vector3 origin;
 
@@ -32,11 +32,12 @@ RIGID_PHYSICS::~RIGID_PHYSICS()
 //******************************************************************************
 void RIGID_PHYSICS::Reset()
 {
-    static const float MaxRandomRotation = 10.0;
-    w.x = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
-    w.y = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
-    w.z = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
+	srand(time(NULL));
+    static const float MaxRandomRotation = 360.0 * PI / 180.0;
     v = StartingVelocity;
+	Geometry->Rotation.x = (float)rand()/((float)RAND_MAX/MaxRandomRotation); 
+	Geometry->Rotation.y = (float)rand()/((float)RAND_MAX/MaxRandomRotation); 
+	Geometry->Rotation.z = (float)rand()/((float)RAND_MAX/MaxRandomRotation); 
     *Pending = *Geometry;
 }
 //******************************************************************************
@@ -86,19 +87,20 @@ bool RIGID_PHYSICS::DetectCollision( const GEOMETRY* In )
 //******************************************************************************
 void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
 {
-    //v = v * (-e);
-    // Temporary: revert back to prevoius position
-    // TODO: move the object as close to the colliding object as possible
-    //       or better yet, move it to where it would be properly after this time step
-    //       after the collision has resolved
-    Pending->Position = Geometry->Position; 
+	// Mass
     static const float m = 10.0;
-    static const matrix3 I( .4, 0.0, 0.0,
-                            0.0, 1.0, 0.0,
-                            0.0, 0.0, .4 );
+	static const float m_inv = 1/10.0;
+	// Inertia Tensor
+    static const matrix3 I( .4*m*5*5, 0.0, 0.0,
+                            0.0, .4*m*5*5, 0.0,
+                            0.0, 0.0, .4*m*5*5 );
+	// Inverse Inertia Tensor
     static const matrix3 I_inv = I.inv();
+
+
+	vector3 CollisionPoint = GetCollisionPoint( In );
     vector3 n = GetCollisionPlaneNormal( In );
-    vector3 r = GetCollisionPoint( In ) - Geometry->Position;
+    vector3 r = CollisionPoint - Geometry->Position;
 	
     //-----------------------------------------------------------------------------
     // Simplified impulse response equation (assuming the plane we're colliding with
@@ -123,20 +125,21 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     vector3 velocityAtPoint = v + angularVelocity;
     vector3 angularMomentum = I_inv * r.cross(n);
     float i = -( 1.0 + e ) * velocityAtPoint.dot( n );
-    float k = 1/m + angularMomentum.cross( r ).dot( n );
+    float k = m_inv + angularMomentum.cross( r ).dot( n );
     float j = i / k;
 	v = v + n * ( j / m );
-    w = w + angularMomentum * j;
+    w = w + angularMomentum * ( j / m );
 
-	vector3 CollisionPoint = GetCollisionPoint( In );
-	Debug_DrawLine( CollisionPoint, CollisionPoint + velocityAtPoint, Color::Maroon );
-	Debug_DrawLine( Geometry->Position, v,                            Color::Navy );
-	Debug_DrawLine( Geometry->Position, w,                            Color::Red );
-	Debug_DrawLine( Geometry->Position, CollisionPoint,               Color::Green );
-	Debug_DrawLine( vector3(0,0,0),     n,                            Color::Orange );
-	if( !World_GetPaused() ) {
-		World_Pause();
-	}
+	Pending->Position = Geometry->Position; 
+	
+//	Debug_DrawLine( CollisionPoint, CollisionPoint + velocityAtPoint, Color::Maroon );
+//	Debug_DrawLine( Geometry->Position, v,                            Color::Navy );
+//	Debug_DrawLine( Geometry->Position, w,                            Color::Red );	
+//	Debug_DrawLine( Geometry->Position, CollisionPoint,               Color::Green );
+//	Debug_DrawLine( vector3(0,0,0),     n,                            Color::Orange );
+//	if( !World_GetPaused() ) {
+//		World_Pause();
+//	}
 }
 //******************************************************************************
 
@@ -149,7 +152,7 @@ vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo )
     return Support( d, Geo, &transform );
 }
 //******************************************************************************
-vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo, const matrix4* m )
+vector3 RIGID_PHYSICS::Support( const vector3 d, const GEOMETRY* Geo, const matrix4* const m )
 {
     float dot_product = -std::numeric_limits<float>::infinity() ;
     vector3 closest;
@@ -179,6 +182,7 @@ vector3 RIGID_PHYSICS::GetCollisionPlaneNormal( const GEOMETRY* In )
 vector3 RIGID_PHYSICS::GetCollisionPoint( const GEOMETRY* In )
 {
     vector3 a = Support( v, Geometry );
+	//vector3 a(1.0,0.0,0.0);
     return a;
 }
 //******************************************************************************

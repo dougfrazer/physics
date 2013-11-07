@@ -55,12 +55,15 @@ public:
 
 public:
 	matrix4();
+	matrix4( float* in );
 	matrix4(float a1, float a2, float a3, float a4,
 		    float b1, float b2, float b3, float b4,
 		    float c1, float c2, float c3, float c4,
 			float d1, float d2, float d3, float d4 );
 
 	vector4 operator*( const vector4 B ) const;
+	matrix4 operator*( const matrix4 in ) const;
+	matrix4 operator+( const matrix4 in ) const;
 
 	// inverse
 	matrix4 inv() const;

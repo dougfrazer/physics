@@ -8,13 +8,11 @@
 #include "string.h"
 
 
-#if __APPLE__
+#if defined( __APPLE__ )
 #include <GLUT/glut.h>
 #else
 #include <GL/glut.h>
 #endif
-
-#define PI 3.14159265
 
 static const vector3 InitialPosition( 0.0, 40.0, 0.0 );
 static const vector3 InitialRotation( 0.0, 0.0, 0.0 );
@@ -50,13 +48,24 @@ void CIRCLE::Update( float DeltaTime )
 
 void CIRCLE::Draw( void )
 {
-    glPushMatrix();
-	
-    glTranslatef( Geometry->Position.x, Geometry->Position.y, Geometry->Position.z );
-    glRotatef( Geometry->Rotation.x, 1.0, 0.0, 0.0 );
-    glRotatef( Geometry->Rotation.y, 0.0, 1.0, 0.0 );
-    glRotatef( Geometry->Rotation.z, 0.0, 0.0, 1.0 );
+	GLfloat modelMatrix[16];
+	GLfloat tempMatrix[16];
+	glGetFloatv( GL_MODELVIEW_MATRIX, modelMatrix );
 
+    glPushMatrix();
+
+	glGetFloatv( GL_MODELVIEW_MATRIX, modelMatrix );
+
+	matrix4 transform;
+	transform.translate( Geometry->Position );
+	transform.rotate( Geometry->Rotation );
+	transform = transform.t(); // needs to be in column-major form
+	transform = transform * matrix4( (float*)modelMatrix );
+
+	glMatrixMode( GL_MODELVIEW );
+	glLoadMatrixf( (GLfloat*)&transform );
+
+	// draw something at the center so it can be distinguished
 	glColor3f(1.0,0.0,0.0);
 	glutWireSphere( 1, 5, 5 );
 	
