@@ -181,9 +181,22 @@ vector3 RIGID_PHYSICS::GetCollisionPlaneNormal( const GEOMETRY* In )
 //******************************************************************************
 vector3 RIGID_PHYSICS::GetCollisionPoint( const GEOMETRY* In )
 {
-    vector3 a = Support( v, Geometry );
-	//vector3 a(1.0,0.0,0.0);
-    return a;
+    matrix4 m;
+    m.translate( Geometry->Position );
+    m.rotate( Geometry->Rotation );
+    vector3 planeNormal = GetCollisionPlaneNormal( In );
+    float min = std::numeric_limits<float>::infinity() ;
+    vector3 ret;
+    for( int i = 0; i < Geometry->NumVertices; i++ ) {
+        vector3 current = vector3( m * vector4(Geometry->VertexList[i]) );
+        float d = current.dot( planeNormal );
+        if( d < min ) {
+            min = d; 
+            ret = current;
+        }
+    }
+    assert( min != std::numeric_limits<float>::infinity() );
+    return ret;
 }
 //******************************************************************************
 
