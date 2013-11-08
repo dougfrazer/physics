@@ -50,12 +50,49 @@ void SQUARE::Update( float DeltaTime )
 }
 void SQUARE::Draw( void )
 {
+	glPushMatrix();
+	glPushAttrib(GL_CURRENT_BIT);
     glTranslatef( 0.0, 0.0, 0.0 );
+	glColor3f( 1, 1, 1 );
     glBegin( GL_LINE_STRIP );
-        glVertex3fv( (GLfloat*)&Geometry->VertexList[0] );
-        glVertex3fv( (GLfloat*)&Geometry->VertexList[1] );
-        glVertex3fv( (GLfloat*)&Geometry->VertexList[2] );
-        glVertex3fv( (GLfloat*)&Geometry->VertexList[3] );
-        glVertex3fv( (GLfloat*)&Geometry->VertexList[0] );
+		for( int i = -size; i < size; i++ ) {
+			if( i % 2 ) {
+				glVertex3f( -size, 0,  i );
+				glVertex3f(  size, 0,  i );
+			} else {
+				glVertex3f(  size, 0,  i );
+				glVertex3f( -size, 0,  i );
+			}
+		}
+		for( int i = -size; i < size; i++ ) {
+			if( i % 2 ) {
+				glVertex3f( -size, 0, -i );
+				glVertex3f(  size, 0, -i );
+			} else {
+				glVertex3f(  size, 0, -i );
+				glVertex3f( -size, 0, -i );
+			}
+		}
+		for( int i = -size; i < size; i++ ) {
+			if( i % 2 ) {
+				glVertex3f( -i, 0,  size );
+				glVertex3f(  i, 0,  size );
+			} else {
+				glVertex3f(  i, 0,  size );
+				glVertex3f( -i, 0,  size );
+			}
+		}
+		for( int i = -size; i < size; i++ ) {
+			if( i % 2 ) {
+				glVertex3f( -i, 0, -size );
+				glVertex3f(  i, 0, -size );
+			} else {
+				glVertex3f(  i, 0, -size );
+				glVertex3f( -i, 0, -size );
+			}
+		}
     glEnd();
+
+	glPopAttrib();
+	glPopMatrix();
 }

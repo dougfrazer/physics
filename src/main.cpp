@@ -7,13 +7,16 @@
 
 #if defined( _WIN32 ) || defined( _WIN64 )
 #include <windows.h>
+#include <strsafe.h>
 #else
 #include <sys/time.h>
+#include <stdio.h>
 #endif
 
 #include "world.h"
 #include "camera.h"
 #include "common.h"
+#include "debug.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 static LARGE_INTEGER f;
@@ -50,20 +53,22 @@ int main( int argc, char* argv )
 //*****************************************************************************
 // Private Interface
 //*****************************************************************************
-
 static float Main_GetDeltaTime()
 {
 #if defined(_WIN32) || defined(_WIN64)
 	LARGE_INTEGER t;
 	QueryPerformanceCounter(&t);
-	float DeltaTime = ( t.QuadPart - lastTime.QuadPart ) * 1000.0 / f.QuadPart;
+	double DeltaTime = ( t.QuadPart - lastTime.QuadPart ) / (float)f.QuadPart;
 	lastTime = t;
+	char string[256];
+	sprintf_s(string, 256, "[DeltaTime] %f\n", DeltaTime);
+	OutputDebugString(string);
 #else
-    timeval t;
-    gettimeofday(&t, NULL);
-    float DeltaTime = t.tv_sec - lastTime.tv_sec;
-    DeltaTime += t.tv_usec - lastTime.tv_usec / 1000;
+	timeval t;
+	gettimeofday(&t, NULL);
+	double DeltaTime = (t.tv_sec - lastTime.tv_sec) + (t.tv_usec - lastTime.tv_usec) / (1000.0*1000.0);
     lastTime = t;
+	printf("[DeltaTime] %f (%f FPS)\n", DeltaTime, 1/DeltaTime);
 #endif
 
     return DeltaTime;
@@ -82,6 +87,7 @@ static void Main_Draw()
 
     Camera_Draw();
     World_Draw();
+	Debug_Draw();
 
     glutSwapBuffers();
 }
@@ -99,16 +105,11 @@ static void Main_Reshape(int width, int height)
 //*****************************************************************************
 static void Main_Idle()
 {
-    float DeltaTime = clamp( 0.001, Main_GetDeltaTime(), 0.01666 );
+	// Don't want to go any deltatimes greater than 1/30
+    float DeltaTime = clamp( 0.0, Main_GetDeltaTime(), 1/30.0 );
 	Main_Update( DeltaTime );
 
     glutPostRedisplay();
-#if defined( __LINUX__ ) || defined( __APPLE__ )
-	struct timespec SleepReq, SleepRes;
-	SleepReq.tv_sec = 0;
-	SleepReq.tv_nsec = (DeltaTime)*(1000)*(1000)*(1000);
-	nanosleep(&SleepReq, &SleepRes);
-#endif
 }
 //*****************************************************************************
 static void Main_InitGlut( int argc, char* argv )
@@ -130,11 +131,12 @@ static void Main_Init( int argc, char* argv )
     Main_InitGlut( argc, argv );
     World_Init();
     Camera_Init();
+
 #if defined(_WIN32) || defined(_WIN64)
 	QueryPerformanceFrequency(&f);
 	QueryPerformanceCounter(&lastTime);
 #else
-    gettimeofday(&lastTime, NULL);
+	gettimeofday(&lastTime, NULL);
 #endif
 }
 //*****************************************************************************

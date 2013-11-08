@@ -8,18 +8,14 @@
 #include "string.h"
 
 
-#if __APPLE__
+#if defined( __APPLE__ )
 #include <GLUT/glut.h>
 #else
 #include <GL/glut.h>
 #endif
 
-#define PI 3.14159265
-
 static const vector3 InitialPosition( 0.0, 40.0, 0.0 );
 static const vector3 InitialRotation( 0.0, 0.0, 0.0 );
-static bool    CollisionFound;
-static vector3 Collision;
 
 CIRCLE::CIRCLE(float r)
 {
@@ -48,33 +44,28 @@ void CIRCLE::Reset()
 
 void CIRCLE::Update( float DeltaTime )
 {
-	if( !World_GetPaused() ) {
-		CollisionFound = false;
-	}	
-}
-
-void CIRCLE::DrawCollision( vector3 c )
-{
-	CollisionFound = true;
-	Collision = c;
-
 }
 
 void CIRCLE::Draw( void )
 {
-    glPushMatrix();
-	glPushAttrib(GL_CURRENT_BIT);
-    glTranslatef( Geometry->Position.x, Geometry->Position.y, Geometry->Position.z );
-    glRotatef( Geometry->Rotation.x, 1.0, 0.0, 0.0 );
-    glRotatef( Geometry->Rotation.y, 0.0, 1.0, 0.0 );
-    glRotatef( Geometry->Rotation.z, 0.0, 0.0, 1.0 );
+	GLfloat modelMatrix[16];
+	GLfloat tempMatrix[16];
+	glGetFloatv( GL_MODELVIEW_MATRIX, modelMatrix );
 
-/*
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, (GLfloat*)Geometry->VertexList);
-    glDrawArrays(GL_LINES, 0, Geometry->NumVertices);
-    glDisableClientState(GL_VERTEX_ARRAY);
-*/
+    glPushMatrix();
+
+	glGetFloatv( GL_MODELVIEW_MATRIX, modelMatrix );
+
+	matrix4 transform;
+	transform.translate( Geometry->Position );
+	transform.rotate( Geometry->Rotation );
+	transform = transform.t(); // needs to be in column-major form
+	transform = transform * matrix4( (float*)modelMatrix );
+
+	glMatrixMode( GL_MODELVIEW );
+	glLoadMatrixf( (GLfloat*)&transform );
+
+	// draw something at the center so it can be distinguished
 	glColor3f(1.0,0.0,0.0);
 	glutWireSphere( 1, 5, 5 );
 	
@@ -86,15 +77,24 @@ void CIRCLE::Draw( void )
             glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v3 ]);
         } 
     glEnd();
-
-	if( CollisionFound ) {
-		glColor3f(0.0,1.0,0.0);
-		glBegin( GL_LINES );
-			glVertex3f( 0,0,0 );
-			glVertex3fv( (GLfloat*)&Collision );
-		glEnd();
+	/*
+	matrix4 transform;
+	transform.translate( Geometry->Position );
+	transform.rotate( Geometry->Rotation );
+	for( uint i = 0; i < Physics->Pending->NumVertices; i++ ) {
+		Physics->Pending->VertexList[i] = transform * Geometry->VertexList[i];
 	}
-	
+
+	glColor3f(0.0,0.0,1.0);
+	glBegin( GL_LINE_STRIP );
+	for( int i = 0; i < Geometry->NumFaces; i++ ) {
+		glVertex3fv((GLfloat*)&Physics->Pending->VertexList[ Geometry->FaceList[ i ].v1 ]);
+		glVertex3fv((GLfloat*)&Physics->Pending->VertexList[ Geometry->FaceList[ i ].v2 ]);
+		glVertex3fv((GLfloat*)&Physics->Pending->VertexList[ Geometry->FaceList[ i ].v3 ]);
+	} 
+	glEnd();
+	*/
+
 	glPopAttrib();
     glPopMatrix();
 }

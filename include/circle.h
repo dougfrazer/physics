@@ -18,10 +18,6 @@ private:
     float       radius;
 
     void CreateIcosahadron(float r, GEOMETRY* Geometry, int subdivision);
-
-// TEMPORARY
-public:
-	static void    DrawCollision( vector3 c );
 };
 
 #endif
