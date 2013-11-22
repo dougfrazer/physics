@@ -36,7 +36,7 @@ void Physics_Update( float DeltaTime )
             PHYSICS* b = PhysicsList.at(j);
             bool Colliding = a->DetectCollision( b->Geometry );
             if( Colliding ) {
-                a->HandleCollision( b->Geometry );
+                a->HandleCollision( b->Geometry, DeltaTime );
             }
         }
     }

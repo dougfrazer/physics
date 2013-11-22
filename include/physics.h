@@ -24,7 +24,7 @@ public:
 
     // This is meant to be a more precise collision detection 
     virtual bool      DetectCollision ( const GEOMETRY* B ) = 0;
-    virtual void      HandleCollision ( const GEOMETRY* B ) = 0;
+    virtual void      HandleCollision ( const GEOMETRY* B, const float DeltaTime ) = 0;
 
     // Cleanup anything post-update
     //virtual void      Postupdate      ( void ) = 0; 

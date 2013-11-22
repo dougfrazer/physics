@@ -32,9 +32,10 @@ protected:
     //
     //*****************************************************************************
     bool DetectCollision( const GEOMETRY* Incoming );
-    void HandleCollision( const GEOMETRY* Incoming );
+    void HandleCollision( const GEOMETRY* Incoming, const float DeltaTime );
 
-protected:
+// TODO: private
+public:
     vertex*   x; // position (center of mass)
     vector3   v; // velocity
     vector3   w; // angular veclocity
@@ -63,7 +64,57 @@ private:
     // Note: this function modifies both the list and the direction.
     //******************************************************************************
     bool Simplex( std::vector<vector3>* list, vector3* d, const vector3 dest );
+    
+    //******************************************************************************
+    // Impulse Response
+    // ----------------
+    //   Simplified impulse response equation (assuming the plane we're colliding with
+    //   has infinite mass and zero velocity)
+    //
+    //   v_new = v_old + j*n
+    //
+    //   where:
+    //                -(1 + e)v dot n
+    //   j =  --------------------------------------
+    //        1/m +  ( (I^-1 * (r x n)) x r) ) dot n
+    //
+    //   j = magnitude of impulse
+    //   e = elasticity (0.0 - 1.0)
+    //   v = current velocity
+    //   n = normal to the plane of impact
+    //   m = mass
+    //   r = vector to point of impact from center of mass
+    //   I = moment of inertia
+    //******************************************************************************
+    void ApplyImpulseResponse( const matrix3 I_inv, const float m_inv, const vector3 r, const vector3 n, vector3* v, vector3* w );
 
-    vector3 GetCollisionPoint( const GEOMETRY* In );
+
+    //******************************************************************************
+    // Bilateral Advancement
+    // ---------------------
+    //   This is an algorithm from Erin Catto to attempt to find the time of impact.
+    //   It will return a value between 0.0 and 1.0 representing the percentage of the 
+    //   DeltaTime we should advance that will result in the impact.
+    //
+    //   Because this is a numerical algorithm, it requires a tolerance (how close
+    //   do the objects have to be before we consider it an "impact").
+    //******************************************************************************
+    float BilateralAdvancement( const GEOMETRY* A, const GEOMETRY* B,
+                                const vector3 v_a, const vector3 v_b, 
+                                const vector3 w_a, const vector3 w_b, 
+                                const vector3 n,
+                                const float DeltaTime,
+                                const float tolerance );
+
+    //******************************************************************************
+    // Utility functions
+    //******************************************************************************
+    vector3 GetCollisionPoint      ( const GEOMETRY* In );
     vector3 GetCollisionPlaneNormal( const GEOMETRY* In );
+    vector3 GetClosestPoint        ( const GEOMETRY* A, const GEOMETRY* B, const matrix4 ta, const matrix4 tb, const vector3 n );
+    float   Seperation             ( const GEOMETRY* A, const GEOMETRY* B, 
+                                     const vector3 v_a, const vector3 v_b, 
+                                     const vector3 w_a, const vector3 w_b, 
+                                     const vector3 n,
+                                     const float DeltaTime, const float t);
 };

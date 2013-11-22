@@ -77,6 +77,7 @@ void CIRCLE::Draw( void )
             glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v3 ]);
         } 
     glEnd();
+
 	/*
 	matrix4 transform;
 	transform.translate( Geometry->Position );
@@ -95,8 +96,22 @@ void CIRCLE::Draw( void )
 	glEnd();
 	*/
 
-	glPopAttrib();
     glPopMatrix();
+
+    vector3 vel = Geometry->Position + ((RIGID_PHYSICS*)Physics)->v;
+    vector3 rot = Geometry->Position + ((RIGID_PHYSICS*)Physics)->w;
+    glColor3f( 0.0, 1.0, 0.0 ); 
+    glBegin( GL_LINES );
+        glVertex3fv( (GLfloat*)&Geometry->Position );
+        glVertex3fv( (GLfloat*)&vel  );
+    glEnd();
+    glColor3f( 0.0, 1.0, 1.0 );
+    glBegin( GL_LINES );
+        glVertex3fv( (GLfloat*)&Geometry->Position );
+        glVertex3fv( (GLfloat*)&rot  );
+    glEnd();
+
+	glPopAttrib();
 }
 
 //

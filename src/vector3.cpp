@@ -62,7 +62,11 @@ float vector3::dot( const vector3 B ) const {
     return x*B.x + y*B.y + z*B.z;
 }
 vector3 vector3::cross( const vector3 B ) const {
-    return skew_symmetric_matrix3( *this ) * B;
+    vector3 v;
+    v.x = y*B.z - z*B.y;
+    v.y = z*B.x - x*B.z;
+    v.z = x*B.y - y*B.x;
+    return v;
 }
 float vector3::magnitude() const { 
     return sqrt( x*x + y*y + z*z );

@@ -48,9 +48,6 @@ void RIGID_PHYSICS::Update( const float DeltaTime )
     // update linear velocity due to gravity
     v = v + g*DeltaTime;
 
-    // decay the rotation (approximation of air resistance, just decay linearly)
- //   w = w * 0.999;
-
     // Update position due to linear velocity
     Pending->Position = Pending->Position + v * DeltaTime;
 
@@ -85,12 +82,12 @@ bool RIGID_PHYSICS::DetectCollision( const GEOMETRY* In )
 //******************************************************************************
 
 //******************************************************************************
-void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
+void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In, const float DeltaTime )
 {
+    // TODO: make all of this material data stored parallel to geometry
 	// Mass
     static const float m = 10.0;
-	static const float m_inv = 1/10.0;
-	// Inertia Tensor
+	// Inertia Tensor ( for a circle )
     static const matrix3 I( .4*m*5*5, 0.0, 0.0,
                             0.0, .4*m*5*5, 0.0,
                             0.0, 0.0, .4*m*5*5 );
@@ -98,39 +95,23 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
     static const matrix3 I_inv = I.inv();
 
 
+    // Find interesting points related to this collision
 	vector3 CollisionPoint = GetCollisionPoint( In );
     vector3 n = GetCollisionPlaneNormal( In );
     vector3 r = CollisionPoint - Geometry->Position;
-	
-    //-----------------------------------------------------------------------------
-    // Simplified impulse response equation (assuming the plane we're colliding with
-    // has infinite mass and zero velocity)
-    //
-    // v_new = v_old + j*n
-    //
-    // where:
-    //              -(1 + e)v dot n
-    // j =  --------------------------------------
-    //      1/m +  ( (I^-1 * (r x n)) x r) ) dot n
-    //
-    // j = magnitude of impulse
-    // e = elasticity (0.0 - 1.0)
-    // v = current velocity
-    // n = normal to the plane of impact
-    // m = mass
-    // r = vector to point of impact from center of mass
-    // I = moment of inertia
-    //----------------------------------------------------------------------------
-    vector3 angularVelocity = I_inv * w;
-    vector3 velocityAtPoint = v + angularVelocity;
-    vector3 angularMomentum = I_inv * r.cross(n);
-    float i = -( 1.0 + e ) * velocityAtPoint.dot( n );
-    float k = m_inv + angularMomentum.cross( r ).dot( n );
-    float j = i / k;
-	v = v + n * ( j / m );
-    w = w + angularMomentum * ( j / m );
 
-	Pending->Position = Geometry->Position; 
+    // Attempt to move the bodies out of the collision
+    vector3 none;
+    if( v.magnitude() < 0.5 ) { 
+        v = none;
+    }
+    float t = BilateralAdvancement( Geometry, In, v, none, w, none, n, DeltaTime, 0.001 );
+    Pending->Position = Geometry->Position + v * t*DeltaTime;
+    Pending->Rotation = Geometry->Rotation + w * t*DeltaTime;
+ 
+    // Apply the forces to the bodies
+    ApplyImpulseResponse( I_inv, m, r, n, &v, &w );
+
 	
 //	Debug_DrawLine( CollisionPoint, CollisionPoint + velocityAtPoint, Color::Maroon );
 //	Debug_DrawLine( Geometry->Position, v,                            Color::Navy );
@@ -140,6 +121,103 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In )
 //	if( !World_GetPaused() ) {
 //		World_Pause();
 //	}
+}
+//******************************************************************************
+
+//******************************************************************************
+float RIGID_PHYSICS::BilateralAdvancement(const GEOMETRY* A, const GEOMETRY* B,
+                                          const vector3 v_a, const vector3 v_b, 
+                                          const vector3 w_a, const vector3 w_b, 
+                                          const vector3 n,
+                                          const float DeltaTime,
+                                          const float tolerance )
+{
+    float t0 = 0.0;
+    float t1 = 1.0;
+    float t = 0.5;
+    float s = std::numeric_limits<float>::infinity();
+    int num_iterations = 0;
+
+    float s_range[10];
+    for( int i = 1; i <= 10; i++ ) {
+        s_range[i-1] = Seperation( A, B, v_a, v_b, w_a, w_b, n, DeltaTime, i/10.0 );
+    }
+
+    while( num_iterations < 100 ) {
+        t = ( t1 - t0 ) / 2.0;
+        s = Seperation( A, B, v_a, v_b, w_a, w_b, n, DeltaTime, t );
+        if( abs(s) < tolerance ) {
+            break;
+        }
+        // Use bisection to find the root
+        if( s < 0 ) {
+            t1 = t;
+        } else {
+            t0 = t;
+        }
+        num_iterations++;
+    }
+    assert( num_iterations != 100 );
+    return t; 
+}
+//******************************************************************************
+
+//******************************************************************************
+float RIGID_PHYSICS::Seperation(const GEOMETRY* A, const GEOMETRY* B,
+                                const vector3 v_a, const vector3 v_b, 
+                                const vector3 w_a, const vector3 w_b, 
+                                const vector3 n,
+                                const float DeltaTime, const float t)
+{
+    vector3 p_a, p_b;
+    vector3 r_a, r_b;
+    matrix4 ta, tb;
+    float timestep = DeltaTime * t;
+        
+    p_a = A->Position + v_a * timestep;
+    r_a = A->Rotation + w_a * timestep;
+    p_b = B->Position + v_b * timestep;
+    r_b = B->Rotation + w_b * timestep;
+
+    ta.translate( p_a );
+    ta.rotate( r_a );
+    tb.translate( p_b );
+    tb.rotate( r_b );
+
+    vector3 a = GetClosestPoint( A, B, ta, tb, n );
+    return a.dot( n );
+}
+//******************************************************************************
+
+//******************************************************************************
+vector3 RIGID_PHYSICS::GetClosestPoint( const GEOMETRY* A, const GEOMETRY* B, const matrix4 ta, const matrix4 tb, const vector3 n )
+{
+    vector3 closest_point;
+    float min = std::numeric_limits<float>::infinity();
+    for( int i = 0; i < A->NumVertices; i++ ) {
+        vector3 a = ta * A->VertexList[i];
+        float d = a.dot( n );
+        if( d < min ) {
+            min = d;
+            closest_point = a;
+        }
+    }
+    assert( min != std::numeric_limits<float>::infinity() );
+    return closest_point;
+}
+//******************************************************************************
+
+//******************************************************************************
+void RIGID_PHYSICS::ApplyImpulseResponse( const matrix3 I_inv, const float m, const vector3 r, const vector3 n, vector3* v, vector3* w )
+{
+    vector3 angularVelocity = I_inv * *w;
+    vector3 velocityAtPoint = *v + angularVelocity;
+    vector3 angularMomentum = I_inv * r.cross(n);
+    float i = -( 1.0 + e ) * velocityAtPoint.dot( n );
+    float k = 1/m + angularMomentum.cross( r ).dot( n );
+    float j = i / k;
+	*v = *v + n * ( j / m );
+    *w = *w + angularMomentum * ( j / m );
 }
 //******************************************************************************
 
@@ -200,7 +278,6 @@ vector3 RIGID_PHYSICS::GetCollisionPoint( const GEOMETRY* In )
 }
 //******************************************************************************
 
-//******************************************************************************
 //******************************************************************************
 // Find the furthest point in the minkowski difference of A and B in the direction d.
 // This is the same as saying find the furthest point in A in the direction of d 

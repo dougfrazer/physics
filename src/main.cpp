@@ -37,9 +37,9 @@ static void   Main_Deinit       ( void );
 //*****************************************************************************
 // Public Interface
 //*****************************************************************************
-int main( int argc, char* argv )
+int main( int argc, char* argv[] )
 {
-    Main_Init( argc, argv );
+    Main_Init( argc, argv[0] );
 
 	glutMainLoop();
 

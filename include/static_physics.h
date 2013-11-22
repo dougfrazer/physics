@@ -12,5 +12,5 @@ public:
     void Reset() {}
 protected:
     bool DetectCollision( const GEOMETRY* Incoming ) { return false; }
-    void HandleCollision( const GEOMETRY* Incoming ) { }
+    void HandleCollision( const GEOMETRY* Incoming, const float DeltaTime ) { }
 };
