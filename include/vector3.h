@@ -31,6 +31,8 @@ public:
     vector3  proj ( const vector3 B ) const;
     float    magnitude( void )        const;
     vector3  normalize( void )        const;
+    
+    vector3  rotate( vector3 axis, float degrees ) const;
 };
 
 #endif

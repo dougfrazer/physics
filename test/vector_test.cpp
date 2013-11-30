@@ -4,6 +4,9 @@
 
 static const vector3 a( 8, 12, -23 );
 static const vector3 b( -12, 1, 48 );
+
+#define PI 3.1415926
+
 //******************************************************************************
 class TEST_NEGATE : public TEST
 {
@@ -111,6 +114,35 @@ class TEST_PROJECT : public TEST
     }
 };
 static TEST_PROJECT TestProject;
+//******************************************************************************
+class TEST_ROTATE_SIMPLE : public TEST
+{
+    public: TEST_ROTATE_SIMPLE() : TEST( "Simple 90 degree rotation" ) {}
+    protected: bool RunInternal()
+    {
+        vector3 v( 1, 0, 0 );
+        vector3 x( 0, 0, 1 );
+        v = v.rotate( x, PI / 2 );
+        return v.x > -0.0001 && v.x < 0.0001 &&
+               v.y > 0.9999 && v.y < 1.0001 && 
+               v.z >-0.0001 && v.z < 0.0001; 
+    }
+};
+static TEST_ROTATE_SIMPLE TestRotateSimple;
+//******************************************************************************
+class TEST_ROTATE : public TEST
+{
+    public: TEST_ROTATE() : TEST( "More complicated rotation (less than 90 degrees)" ) {}
+    protected: bool RunInternal()
+    {
+        vector3 r = a.rotate( b, 17 * PI / 43 );
+        vector3 answer( -4.931139, 5.611586, -26.099693 );
+        return r.x - answer.x > -0.0001 && r.x - answer.x < 0.0001 &&
+               r.y - answer.y > -0.0001 && r.y - answer.y < 0.0001 && 
+               r.z - answer.z > -0.0001 && r.z - answer.z < 0.0001; 
+    }
+};
+static TEST_ROTATE TestRotate;
 //******************************************************************************
 
 

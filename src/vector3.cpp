@@ -1,4 +1,5 @@
 #include "vector3.h"
+#include "quaternion.h"
 #include "matrix.h"
 
 vector3::vector3() { 
@@ -67,6 +68,7 @@ vector3 vector3::cross( const vector3 B ) const {
     v.y = z*B.x - x*B.z;
     v.z = x*B.y - y*B.x;
     return v;
+//	return skew_symmetric_matrix3( *this ) * B;
 }
 float vector3::magnitude() const { 
     return sqrt( x*x + y*y + z*z );
@@ -83,4 +85,11 @@ vector3 vector3::proj( const vector3 B ) const {
     float B_mag = B.magnitude();
     vector3 v = B * ( dot(B) / (B_mag*B_mag) );
     return v;
+}
+
+vector3 vector3::rotate( vector3 axis, float degrees ) const {
+    quaternion q( axis, degrees );
+    quaternion p( x, y, z, 0.0 );
+    quaternion p_prime = q * p * q.inverse();
+    return vector3( p_prime.x, p_prime.y, p_prime.z ); 
 }
