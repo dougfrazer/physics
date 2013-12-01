@@ -132,6 +132,7 @@ float RIGID_PHYSICS::BilateralAdvancement(const GEOMETRY* A, const GEOMETRY* B,
                                           const float DeltaTime,
                                           const float tolerance )
 {
+    static const int max_iterations = 100;
     float t0 = 0.0;
     float t1 = 1.0;
     float t = 0.5;
@@ -143,10 +144,10 @@ float RIGID_PHYSICS::BilateralAdvancement(const GEOMETRY* A, const GEOMETRY* B,
         s_range[i-1] = Seperation( A, B, v_a, v_b, w_a, w_b, n, DeltaTime, i/10.0 );
     }
 
-    while( num_iterations < 100 ) {
-        t = ( t1 - t0 ) / 2.0;
+    while( ++num_iterations < max_iterations ) {
+        t = ( t1 + t0 ) / 2.0;
         s = Seperation( A, B, v_a, v_b, w_a, w_b, n, DeltaTime, t );
-        if( abs(s) < tolerance ) {
+        if( fabs(s) < tolerance ) {
             break;
         }
         // Use bisection to find the root
@@ -155,9 +156,8 @@ float RIGID_PHYSICS::BilateralAdvancement(const GEOMETRY* A, const GEOMETRY* B,
         } else {
             t0 = t;
         }
-        num_iterations++;
     }
-    assert( num_iterations != 100 );
+    assert( num_iterations != max_iterations );
     return t; 
 }
 //******************************************************************************
