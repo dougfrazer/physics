@@ -37,8 +37,10 @@ protected:
 // TODO: private
 public:
     vertex*   x; // position (center of mass)
-    vector3   v; // velocity
-    vector3   w; // angular veclocity
+    vector3   p; // Linear Momentum
+    vector3   L; // Angular Momentum
+//    vector3   v; // velocity
+//    vector3   w; // angular veclocity
 
 private:
     //******************************************************************************
@@ -86,7 +88,7 @@ private:
     //   r = vector to point of impact from center of mass
     //   I = moment of inertia
     //******************************************************************************
-    void ApplyImpulseResponse( const matrix3 I_inv, const float m_inv, const vector3 r, const vector3 n, vector3* v, vector3* w );
+    void ApplyImpulseResponse( const matrix3 I_inv, const float m_inv, const vector3 r, const vector3 n, vector3 v, vector3 w );
 
 
     //******************************************************************************

@@ -1,13 +1,15 @@
-#include "camera.h"
-#include "world.h"
-#include "vector3.h"
-
-#include "common.h"
-#if __APPLE__
+#if defined( __APPLE__ )
 #include <GLUT/glut.h>
 #else
 #include <GL/glut.h>
 #endif
+
+#include "camera.h"
+#include "world.h"
+#include "vector3.h"
+#include "debug.h"
+
+#include "common.h"
 
 static const vector3 StartingPosition( 60.0, 15.0, 0.0  );
 static const vector3 StartingLook    ( 0.0 , 15.0, 0.0  );
@@ -118,6 +120,7 @@ void processNormalKeys(unsigned char key, int x, int y)
     case 'r': World_Reset(); Camera_Reset();    break;
     case ' ': World_Pause();                    break;
     case 'p': World_Pause(); World_Update( 0.0166666666 ); World_Pause(); break;
+    case 'c': Debug_ClearLines(); break;
     }
 }
 

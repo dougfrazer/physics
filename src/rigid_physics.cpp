@@ -14,6 +14,15 @@ static const vector3 g( 0.0, -9.8, 0.0);
 static const float e = 0.85;
 static const vector3 StartingVelocity( 0.0, 0.0, 0.0 );
 static const vector3 origin;
+// TODO: make all of this material data stored parallel to geometry
+// Mass
+static const float m = 10.0;
+// Inertia Tensor ( for a circle )
+static const matrix3 I( .4*m*5*5, 0.0, 0.0,
+                        0.0, .4*m*5*5, 0.0,
+                        0.0, 0.0, .4*m*5*5 );
+// Inverse Inertia Tensor
+static const matrix3 I_inv = I.inv();
 
 //******************************************************************************
 RIGID_PHYSICS::RIGID_PHYSICS( GEOMETRY* Geo )
@@ -34,7 +43,8 @@ void RIGID_PHYSICS::Reset()
 {
 	srand(time(NULL));
     static const float MaxRandomRotation = 360.0 * PI / 180.0;
-    v = StartingVelocity;
+    p = origin;
+    L = origin;
 	Geometry->Rotation.x = (float)rand()/((float)RAND_MAX/MaxRandomRotation); 
 	Geometry->Rotation.y = (float)rand()/((float)RAND_MAX/MaxRandomRotation); 
 	Geometry->Rotation.z = (float)rand()/((float)RAND_MAX/MaxRandomRotation); 
@@ -45,13 +55,12 @@ void RIGID_PHYSICS::Reset()
 //******************************************************************************
 void RIGID_PHYSICS::Update( const float DeltaTime )
 {
-    // update linear velocity due to gravity
-    v = v + g*DeltaTime;
+    p = p + g * ( m * DeltaTime );
+    
+    vector3 v = p * 1/m;
+    vector3 w = I_inv * L;
 
-    // Update position due to linear velocity
     Pending->Position = Pending->Position + v * DeltaTime;
-
-    // Update rotation due to angular velocity
     Pending->Rotation = Pending->Rotation + w * DeltaTime;
 }
 //******************************************************************************
@@ -84,15 +93,6 @@ bool RIGID_PHYSICS::DetectCollision( const GEOMETRY* In )
 //******************************************************************************
 void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In, const float DeltaTime )
 {
-    // TODO: make all of this material data stored parallel to geometry
-	// Mass
-    static const float m = 10.0;
-	// Inertia Tensor ( for a circle )
-    static const matrix3 I( .4*m*5*5, 0.0, 0.0,
-                            0.0, .4*m*5*5, 0.0,
-                            0.0, 0.0, .4*m*5*5 );
-	// Inverse Inertia Tensor
-    static const matrix3 I_inv = I.inv();
 
 
     // Find interesting points related to this collision
@@ -102,15 +102,14 @@ void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In, const float DeltaTime )
 
     // Attempt to move the bodies out of the collision
     vector3 none;
-    if( v.magnitude() < 0.5 ) { 
-        v = none;
-    }
+    vector3 v = p * 1/m;
+    vector3 w = I_inv * L;
     float t = BilateralAdvancement( Geometry, In, v, none, w, none, n, DeltaTime, 0.001 );
     Pending->Position = Geometry->Position + v * t*DeltaTime;
     Pending->Rotation = Geometry->Rotation + w * t*DeltaTime;
  
     // Apply the forces to the bodies
-    ApplyImpulseResponse( I_inv, m, r, n, &v, &w );
+    ApplyImpulseResponse( I_inv, m, r, n, v, w );
 
 	
 //	Debug_DrawLine( CollisionPoint, CollisionPoint + velocityAtPoint, Color::Maroon );
@@ -132,17 +131,18 @@ float RIGID_PHYSICS::BilateralAdvancement(const GEOMETRY* A, const GEOMETRY* B,
                                           const float DeltaTime,
                                           const float tolerance )
 {
-    static const int max_iterations = 100;
+    static const int max_iterations = 50;
     float t0 = 0.0;
     float t1 = 1.0;
     float t = 0.5;
     float s = std::numeric_limits<float>::infinity();
     int num_iterations = 0;
 
-    float s_range[10];
-    for( int i = 1; i <= 10; i++ ) {
-        s_range[i-1] = Seperation( A, B, v_a, v_b, w_a, w_b, n, DeltaTime, i/10.0 );
-    }
+//    DEBUG ONLY
+//    float s_range[10];
+//    for( int i = 1; i <= 10; i++ ) {
+//        s_range[i-1] = Seperation( A, B, v_a, v_b, w_a, w_b, n, DeltaTime, i/10.0 );
+//    }
 
     while( ++num_iterations < max_iterations ) {
         t = ( t1 + t0 ) / 2.0;
@@ -158,7 +158,8 @@ float RIGID_PHYSICS::BilateralAdvancement(const GEOMETRY* A, const GEOMETRY* B,
         }
     }
     assert( num_iterations != max_iterations );
-    return t; 
+
+    return t;
 }
 //******************************************************************************
 
@@ -188,8 +189,6 @@ float RIGID_PHYSICS::Seperation(const GEOMETRY* A, const GEOMETRY* B,
     return a.dot( n );
 }
 //******************************************************************************
-
-//******************************************************************************
 vector3 RIGID_PHYSICS::GetClosestPoint( const GEOMETRY* A, const GEOMETRY* B, const matrix4 ta, const matrix4 tb, const vector3 n )
 {
     vector3 closest_point;
@@ -208,16 +207,14 @@ vector3 RIGID_PHYSICS::GetClosestPoint( const GEOMETRY* A, const GEOMETRY* B, co
 //******************************************************************************
 
 //******************************************************************************
-void RIGID_PHYSICS::ApplyImpulseResponse( const matrix3 I_inv, const float m, const vector3 r, const vector3 n, vector3* v, vector3* w )
+void RIGID_PHYSICS::ApplyImpulseResponse( const matrix3 I_inv, const float m, const vector3 r, const vector3 n, const vector3 v, const vector3 w )
 {
-    vector3 angularVelocity = I_inv * *w;
-    vector3 velocityAtPoint = *v + angularVelocity;
-    vector3 angularMomentum = I_inv * r.cross(n);
+    vector3 velocityAtPoint = v + w.cross(r);
     float i = -( 1.0 + e ) * velocityAtPoint.dot( n );
-    float k = 1/m + angularMomentum.cross( r ).dot( n );
+    float k = 1/m + ( (I_inv * r.cross(n) ).cross(r) ).dot(n);
     float j = i / k;
-	*v = *v + n * ( j / m );
-    *w = *w + angularMomentum * ( j / m );
+    p = p + n * j;
+    L = L + r.cross(n) * j;
 }
 //******************************************************************************
 

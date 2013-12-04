@@ -98,6 +98,7 @@ void CIRCLE::Draw( void )
 
     glPopMatrix();
 
+/*
     vector3 vel = Geometry->Position + ((RIGID_PHYSICS*)Physics)->v;
     vector3 rot = Geometry->Position + ((RIGID_PHYSICS*)Physics)->w;
     glColor3f( 0.0, 1.0, 0.0 ); 
@@ -110,7 +111,7 @@ void CIRCLE::Draw( void )
         glVertex3fv( (GLfloat*)&Geometry->Position );
         glVertex3fv( (GLfloat*)&rot  );
     glEnd();
-
+*/
 	glPopAttrib();
 }
 

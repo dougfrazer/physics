@@ -31,15 +31,20 @@ void Debug_Draw()
 	glPushAttrib(GL_CURRENT_BIT);
 
 	int size = debugLines.size();
-	for(int i = 0; i < size; i++ ) {
-		line l = debugLines.at(i);
-		glColor3f( l.c.GetR(), l.c.GetG(), l.c.GetB() );
-		glBegin( GL_LINES );
-			glVertex3fv( (GLfloat*)&l.a );
-			glVertex3fv( (GLfloat*)&l.b );
-		glEnd();
-	}
+    glBegin( GL_LINES );
+        for(int i = 0; i < size; i++ ) {
+            line l = debugLines.at(i);
+            glColor3f( l.c.GetR(), l.c.GetG(), l.c.GetB() );
+                glVertex3fv( (GLfloat*)&l.a );
+                glVertex3fv( (GLfloat*)&l.b );
+        }
+    glEnd();
 
 	glPopAttrib();
 	glPopMatrix();
+}
+
+void Debug_ClearLines()
+{
+    debugLines.clear();
 }
