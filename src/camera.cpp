@@ -5,12 +5,12 @@
 #endif
 
 #include "camera.h"
-#include "world.h"
 #include "vector3.h"
-#include "debug.h"
-
 #include "common.h"
 
+///////////////////////////////////////////////////////////////////////////////
+// Static Data
+///////////////////////////////////////////////////////////////////////////////
 static const vector3 StartingPosition( 60.0, 15.0, 0.0  );
 static const vector3 StartingLook    ( 0.0 , 15.0, 0.0  );
 static const vector3 StartingOrbit   ( 0.0 , 0.0 , 0.0  );
@@ -23,37 +23,12 @@ static struct {
     unsigned int Pressed;
 } CameraData;
 
-static void releaseKey(int key, int x, int y);
-static void pressKey(int key, int x, int y);
-static void processNormalKeys(unsigned char key, int x, int y);
-static void releaseNormalKeys(unsigned char key, int x, int y);
-static void Camera_Reset();
-
-enum KEYBOARD_EVENTS
-{
-    FORWARD,
-    BACK,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    PAN_DOWN,
-    PAN_UP,
-    PAN_LEFT,
-    PAN_RIGHT,
-};
-
-
+///////////////////////////////////////////////////////////////////////////////
+// Public Functions
+///////////////////////////////////////////////////////////////////////////////
 void Camera_Init( void )
 {
     Camera_Reset();
-
-    // Glut Input Commands
-    glutIgnoreKeyRepeat(1);
-    glutSpecialFunc(pressKey);
-    glutSpecialUpFunc(releaseKey);
-    glutKeyboardFunc(processNormalKeys);
-    glutKeyboardUpFunc(releaseNormalKeys);
 }
 
 void Camera_Deinit( void )
@@ -70,72 +45,31 @@ void Camera_Draw( void )
 	glRotatef( (int)CameraData.orbit.z % 360, 0.0, 0.0, 1.0 );
 }
 
+#define CHECK_PRESSED(flag) ((CameraData.Pressed & 1<<flag) != 0)
 void Camera_Update( float DeltaTime )
 {
-    if( CameraData.Pressed & 1<<FORWARD )   { CameraData.Position.x -= 0.02; CameraData.Look.x -= 0.02; }
-    if( CameraData.Pressed & 1<<BACK )      { CameraData.Position.x += 0.02; CameraData.Look.x += 0.02; }
-    if( CameraData.Pressed & 1<<LEFT )      { CameraData.Position.z += 0.02; CameraData.Look.z += 0.02; }
-    if( CameraData.Pressed & 1<<RIGHT )     { CameraData.Position.z -= 0.02; CameraData.Look.z -= 0.02; }
-    if( CameraData.Pressed & 1<<UP )        { CameraData.Position.y -= 0.02; CameraData.Look.y -= 0.02; }
-    if( CameraData.Pressed & 1<<DOWN )      { CameraData.Position.y += 0.02; CameraData.Look.y += 0.02; }
-    if( CameraData.Pressed & 1<<PAN_LEFT )  { CameraData.orbit.y += 0.1; }
-    if( CameraData.Pressed & 1<<PAN_RIGHT ) { CameraData.orbit.y -= 0.1; }
-    if( CameraData.Pressed & 1<<PAN_UP )    { CameraData.orbit.x += 0.1; }
-    if( CameraData.Pressed & 1<<PAN_DOWN )  { CameraData.orbit.x -= 0.1; }
+    if( CHECK_PRESSED(FORWARD) )   { CameraData.Position.x -= 0.02; CameraData.Look.x -= 0.02; }
+    if( CHECK_PRESSED(BACK) )      { CameraData.Position.x += 0.02; CameraData.Look.x += 0.02; }
+    if( CHECK_PRESSED(LEFT) )      { CameraData.Position.z += 0.02; CameraData.Look.z += 0.02; }
+    if( CHECK_PRESSED(RIGHT) )     { CameraData.Position.z -= 0.02; CameraData.Look.z -= 0.02; }
+    if( CHECK_PRESSED(UP) )        { CameraData.Position.y -= 0.02; CameraData.Look.y -= 0.02; }
+    if( CHECK_PRESSED(DOWN) )      { CameraData.Position.y += 0.02; CameraData.Look.y += 0.02; }
+    if( CHECK_PRESSED(ROTATE_LEFT) )  { CameraData.orbit.y += 0.1; }
+    if( CHECK_PRESSED(ROTATE_RIGHT) ) { CameraData.orbit.y -= 0.1; }
+    if( CHECK_PRESSED(ROTATE_UP) )    { CameraData.orbit.x += 0.1; }
+    if( CHECK_PRESSED(ROTATE_DOWN) )  { CameraData.orbit.x -= 0.1; }
 }
 
-void pressKey(int key, int x, int y)
+void Camera_StartMove(CAMERA_DIRECTION dir)
 {
-    switch (key)
-    {
-    case GLUT_KEY_LEFT:  CameraData.Pressed |= 1<< PAN_LEFT  ; break;
-    case GLUT_KEY_RIGHT: CameraData.Pressed |= 1<< PAN_RIGHT ; break;
-    case GLUT_KEY_UP:    CameraData.Pressed |= 1<< PAN_UP    ; break;
-    case GLUT_KEY_DOWN:  CameraData.Pressed |= 1<< PAN_DOWN  ; break;
-    }
+    CameraData.Pressed |= 1<<dir;
 }
 
-void releaseKey(int key, int x, int y)
+void Camera_StopMove(CAMERA_DIRECTION dir)
 {
-    switch (key)
-    {
-    case GLUT_KEY_LEFT:  CameraData.Pressed &= ~(1<< PAN_LEFT)  ; break;
-    case GLUT_KEY_RIGHT: CameraData.Pressed &= ~(1<< PAN_RIGHT) ; break;
-    case GLUT_KEY_UP:    CameraData.Pressed &= ~(1<< PAN_UP)    ; break;
-    case GLUT_KEY_DOWN:  CameraData.Pressed &= ~(1<< PAN_DOWN)  ; break;
-    }
-
+    CameraData.Pressed &= ~(1<<dir);
 }
 
-void processNormalKeys(unsigned char key, int x, int y)
-{
-    switch( key )
-    {
-    case 'w': CameraData.Pressed |= 1<<FORWARD; break;
-    case 'a': CameraData.Pressed |= 1<<LEFT;    break;
-    case 's': CameraData.Pressed |= 1<<BACK;    break;
-    case 'd': CameraData.Pressed |= 1<<RIGHT;   break;
-    case 'q': CameraData.Pressed |= 1<<UP;      break;
-    case 'e': CameraData.Pressed |= 1<<DOWN;    break;
-    case 'r': World_Reset(); Camera_Reset();    break;
-    case ' ': World_Pause();                    break;
-    case 'p': World_Pause(); World_Update( 0.0166666666 ); World_Pause(); break;
-    case 'c': Debug_ClearLines(); break;
-    }
-}
-
-void releaseNormalKeys(unsigned char key, int x, int y)
-{
-    switch( key )
-    {
-    case 'w': CameraData.Pressed &= ~(1<<FORWARD); break;
-    case 'a': CameraData.Pressed &= ~(1<<LEFT)   ; break;
-    case 's': CameraData.Pressed &= ~(1<<BACK)   ; break;
-    case 'd': CameraData.Pressed &= ~(1<<RIGHT)  ; break;
-    case 'q': CameraData.Pressed &= ~(1<<UP)     ; break;
-    case 'e': CameraData.Pressed &= ~(1<<DOWN)   ; break;
-    }
-}
 
 void Camera_Reset()
 {

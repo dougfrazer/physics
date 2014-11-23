@@ -17,6 +17,7 @@
 #include "camera.h"
 #include "common.h"
 #include "debug.h"
+#include "input.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 static LARGE_INTEGER f;
@@ -131,6 +132,7 @@ static void Main_Init( int argc, char* argv )
     Main_InitGlut( argc, argv );
     World_Init();
     Camera_Init();
+    Input_Init();
 
 #if defined(_WIN32) || defined(_WIN64)
 	QueryPerformanceFrequency(&f);
