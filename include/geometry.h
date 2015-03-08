@@ -13,8 +13,11 @@ public:
     int       NumTriangleVerts;
     vertex*   TriangleVertList;
 
-    vector3   Position; // todo: take this out of the geometry - this is not raw data
+    // TODO: take this out of the geometry - this is not raw data
+    vector3   Position;
     vector3   Rotation;
+    vector3   p; // linear momentum
+    vector3   L; // angular momentum
 
 public:
     GEOMETRY() { }

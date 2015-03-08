@@ -3,6 +3,11 @@
 #include "matrix.h"
 #include <vector>
 
+
+void RigidPhysics_TryUpdate(GEOMETRY* To, const GEOMETRY* From, float DeltaTime);
+bool RigidPhysics_DetectCollision(const GEOMETRY* A, const GEOMETRY* B);
+void RigidPhysics_ApplyCollisionResponse(GEOMETRY* A, const GEOMETRY* B);
+
 class RIGID_PHYSICS : public PHYSICS
 {
 public:
@@ -10,7 +15,8 @@ public:
     ~RIGID_PHYSICS();
 
 public:
-    void Update( const float DeltaTime );
+//    void Update( const float DeltaTime );
+//    void TryUpdate( const float deltaTime );
     void Reset( );
 protected:
     //******************************************************************************
@@ -31,42 +37,20 @@ protected:
     //   and then a fourth.  If we can find all 4 points, we have a collision, otherwise we do not.
     //
     //*****************************************************************************
-    bool DetectCollision( const GEOMETRY* Incoming );
-    void HandleCollision( const GEOMETRY* Incoming, const float DeltaTime );
+//    bool DetectCollision( const GEOMETRY* A, const GEOMETRY* B ) const;
+//    void HandleCollision( const GEOMETRY* Incoming, const float DeltaTime );
+//    void ApplyCollisionResponse( const GEOMETRY* B );
 
 // TODO: private
 public:
     vertex*   x; // position (center of mass)
-    vector3   p; // Linear Momentum
-    vector3   L; // Angular Momentum
+//    vector3   p; // Linear Momentum
+//    vector3   L; // Angular Momentum
 //    vector3   v; // velocity
 //    vector3   w; // angular veclocity
 
 private:
-    //******************************************************************************
-    // Support:
-    // --------
-    //   This will attempt to find the closest point in the geometry to the vector
-    //   passed in.
-    //******************************************************************************
-    vector3 Support( const vector3 d, const GEOMETRY* Geo );
-    vector3 Support( const vector3 d, const GEOMETRY* Geo, const matrix4* m );
-    vector3 Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B );
 
-    //******************************************************************************
-    // Simplex:
-    // --------
-    //   This function will take in a list of points, and a direction.  It knows the last
-    //   point was a point that was just added.  We will test to see if that point is part of
-    //   a tetrahedron surrounding the origin.  If it is not, we discard it, and change the direction to face
-    //   the origin.  If it is part of the tetrahedron, we leave it, and update our search direction
-    //   towards the origin but in the direction perpendicular to what we just added.
-    //
-	// Note: this function will assume the last point in the list be the point we just added
-    // Note: this function modifies both the list and the direction.
-    //******************************************************************************
-    bool Simplex( std::vector<vector3>* list, vector3* d, const vector3 dest );
-    
     //******************************************************************************
     // Impulse Response
     // ----------------
@@ -88,7 +72,7 @@ private:
     //   r = vector to point of impact from center of mass
     //   I = moment of inertia
     //******************************************************************************
-    void ApplyImpulseResponse( const matrix3 I_inv, const float m_inv, const vector3 r, const vector3 n, vector3 v, vector3 w );
+ //   void ApplyImpulseResponse( const matrix3 I_inv, const float m_inv, const vector3 r, const vector3 n, vector3 v, vector3 w );
 
 
     //******************************************************************************
@@ -101,22 +85,18 @@ private:
     //   Because this is a numerical algorithm, it requires a tolerance (how close
     //   do the objects have to be before we consider it an "impact").
     //******************************************************************************
-    float BilateralAdvancement( const GEOMETRY* A, const GEOMETRY* B,
-                                const vector3 v_a, const vector3 v_b, 
-                                const vector3 w_a, const vector3 w_b, 
-                                const vector3 n,
-                                const float DeltaTime,
-                                const float tolerance );
+//    float BilateralAdvancement( const GEOMETRY* A, const GEOMETRY* B,
+//                                const vector3 v_a, const vector3 v_b,
+//                                const vector3 w_a, const vector3 w_b,
+//                                const float DeltaTime,
+//                                const float tolerance );
 
     //******************************************************************************
     // Utility functions
     //******************************************************************************
-    vector3 GetCollisionPoint      ( const GEOMETRY* In );
-    vector3 GetCollisionPlaneNormal( const GEOMETRY* In );
-    vector3 GetClosestPoint        ( const GEOMETRY* A, const GEOMETRY* B, const matrix4 ta, const matrix4 tb, const vector3 n );
-    float   Seperation             ( const GEOMETRY* A, const GEOMETRY* B, 
-                                     const vector3 v_a, const vector3 v_b, 
-                                     const vector3 w_a, const vector3 w_b, 
-                                     const vector3 n,
-                                     const float DeltaTime, const float t);
+//    float GetClosestPoint        ( const GEOMETRY* A, const GEOMETRY* B, const matrix4 ta, const matrix4 tb );
+//    float   Seperation             ( const GEOMETRY* A, const GEOMETRY* B,
+//                                     const vector3 v_a, const vector3 v_b,
+//                                     const vector3 w_a, const vector3 w_b,
+//                                     const float DeltaTime, const float t);
 };
