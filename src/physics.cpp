@@ -50,7 +50,6 @@ void Physics_Update( float DeltaTime )
         {
             PHYSICS* physics = *it;
             RigidPhysics_TryUpdate(physics->Pending, physics->Geometry, currentPercent*DeltaTime);
-            //(*it)->TryUpdate(currentPercent*DeltaTime);
         }
 
         // See if there are any collisions (for everything in the update list, for everything in the world)
@@ -70,6 +69,8 @@ void Physics_Update( float DeltaTime )
                     break;
                 }
             }
+            // TODO: support arbitrary number of collisions/objects
+            if(Collision) break;
         }
 
         if( !Collision )
@@ -80,11 +81,6 @@ void Physics_Update( float DeltaTime )
             {
                 *PhysicsList.at(i)->Geometry = *PhysicsList.at(i)->Pending;
             }
-           // for( auto it = updateList.begin(); it != updateList.end(); ++it )
-           // {
-           //     (*it)->Geometry = (*it)->Pending;
-           //}
-
             // See if there are any collisions pending from last iteration
             if( collision_a )
             {
@@ -109,36 +105,4 @@ void Physics_Update( float DeltaTime )
             currentPercent = currentPercent / 2.0f;
         }
     }
-
-
-
-
-
-/*
-    int NumObjects = PhysicsList.size();
-
-    // Update all objects positions
-    for( int i = 0; i < NumObjects; i++ ) {
-        PhysicsList.at(i)->Update( DeltaTime );
-    }
-
-    // For each object, tell it to "apply whatever forces are necessary to get it out of each collision"
-    bool Collision = false;
-    for( int i = 0; i < NumObjects; i++ ) {
-        for( int j = 0; j < NumObjects; j++ ) {
-            if( j == i ) continue; // can't collide with yourself
-            PHYSICS* a = PhysicsList.at(i);
-            PHYSICS* b = PhysicsList.at(j);
-            bool Colliding = a->DetectCollision( b->Geometry );
-            if( Colliding ) {
-                a->HandleCollision( b->Geometry, DeltaTime );
-            }
-        }
-    }
-
-    // Apply pending geometry
-    for( int i = 0; i < NumObjects; i++) {
-        *PhysicsList.at(i)->Geometry = *PhysicsList.at(i)->Pending;
-    }
-*/
 }

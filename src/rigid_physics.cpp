@@ -26,7 +26,8 @@ static const matrix3 I( moment_of_inertia, 0.0, 0.0,
 // Inverse Inertia Tensor
 static const matrix3 I_inv = I.inv();
 
-#define DEBUG 1
+#define DEBUG_ENERGY 0
+#define DRAW_DEBUG_LINES 1
 
 //******************************************************************************
 // Support:
@@ -92,11 +93,6 @@ void RIGID_PHYSICS::Reset()
 //******************************************************************************
 
 //******************************************************************************
-//void RIGID_PHYSICS::Update( const float DeltaTime )
-//{
-//    // TODO: cleanup
-//}
-//******************************************************************************
 void RigidPhysics_TryUpdate( GEOMETRY* To, const GEOMETRY* From, float DeltaTime )
 {
     To->p = From->p + ( g * m ) * DeltaTime;
@@ -108,7 +104,7 @@ void RigidPhysics_TryUpdate( GEOMETRY* To, const GEOMETRY* From, float DeltaTime
     To->Position = From->Position + v * DeltaTime;
     To->Rotation = From->Rotation + w * DeltaTime;
 
-#ifdef DEBUG
+#if DEBUG_ENERGY
     vector3 vel = To->p * 1/m;
     vector3 rot = I_inv * To->L;
     float Ke_translate = 0.5f * m * vel.magnitude()*vel.magnitude();
@@ -117,28 +113,6 @@ void RigidPhysics_TryUpdate( GEOMETRY* To, const GEOMETRY* From, float DeltaTime
     printf("[DT=%f] Kinetic Energy: %f (tran=%f (P=%f,K=%f) | rot=%f)\n", DeltaTime, Ke_translate+Ke_rotate+Pe_gravity, Ke_translate+Pe_gravity, Pe_gravity, Ke_translate, Ke_rotate);
 #endif
 }
-//void RIGID_PHYSICS::TryUpdate( const float DeltaTime )
-//{
-//    // deltaP = F * deltaT
-//    // F = m * a
-//    Pending->p = Geometry->p + ( g * m ) * DeltaTime;
-//    Pending->L = Geometry->L;
-//
-//    vector3 v = Pending->p * 1/m;
-//    vector3 w = I_inv * Pending->L;
-//
-//    Pending->Position = Geometry->Position + v * DeltaTime;
-//    Pending->Rotation = Geometry->Rotation + w * DeltaTime;
-//
-//#ifdef DEBUG
-//    vector3 vel = Pending->p * 1/m;
-//    vector3 rot = I_inv * Pending->L;
-//    float Ke_translate = 0.5f * m * vel.magnitude()*vel.magnitude();
-//    float Pe_gravity = m * g.magnitude() * Geometry->Position.y;
-//    float Ke_rotate = 0.5f * moment_of_inertia * rot.magnitude()*rot.magnitude();
-//    printf("[DT=%f] Kinetic Energy: %f (tran=%f (P=%f,K=%f) | rot=%f)\n", DeltaTime, Ke_translate+Ke_rotate+Pe_gravity, Ke_translate+Pe_gravity, Pe_gravity, Ke_translate, Ke_rotate);
-//#endif
-//}
 //******************************************************************************
 bool RigidPhysics_DetectCollision( const GEOMETRY* A, const GEOMETRY* B)
 {
@@ -164,138 +138,6 @@ bool RigidPhysics_DetectCollision( const GEOMETRY* A, const GEOMETRY* B)
 }
 
 //******************************************************************************
-//bool RIGID_PHYSICS::DetectCollision( const GEOMETRY* A, const GEOMETRY* B ) const
-//{
-//}
-//******************************************************************************
-//void RIGID_PHYSICS::ApplyCollisionResponse( const GEOMETRY* B )
-//{
-//    float depth;
-//	vector3 CollisionPoint = GetCollisionPoint( Geometry, B, &depth );
-//    vector3 n = GetCollisionPlaneNormal( Geometry, B );
-//    vector3 r = CollisionPoint - Geometry->Position;
-//
-//    // Attempt to move the bodies out of the collision
-//    vector3 none;
-//    vector3 v = Geometry->p * 1/m;
-//    vector3 w = I_inv * Geometry->L;
-//
-//    // Apply the forces to the bodies
-//    ApplyImpulseResponse( I_inv, m, r, n, v, w );
-//}
-//******************************************************************************
-
-//******************************************************************************
-//void RIGID_PHYSICS::HandleCollision( const GEOMETRY* In, const float DeltaTime )
-//{
-//    // Find interesting points related to this collision
-//    float depth;
-//	vector3 CollisionPoint = GetCollisionPoint( Geometry, In, &depth );
-//    vector3 r = CollisionPoint - Geometry->Position;
-//
-//    // Attempt to move the bodies out of the collision
-//    vector3 none;
-//    vector3 v = Geometry->p * 1/m;
-//    vector3 w = I_inv * Geometry->L;
-//    float t = BilateralAdvancement( Geometry, In, v, none, w, none, DeltaTime, 0.001 );
-//    Pending->Position = Geometry->Position + v * t*DeltaTime;
-//    Pending->Rotation = Geometry->Rotation + w * t*DeltaTime;
-//
-//    //Pending->Position = Pending->Position + n * depth;
-//
-//    // Apply the forces to the bodies
-//    ApplyImpulseResponse( I_inv, m, r, GetCollisionPlaneNormal(Geometry, In), v, w );
-//
-//
-////	Debug_DrawLine( CollisionPoint, CollisionPoint + velocityAtPoint, Color::Maroon );
-////	Debug_DrawLine( Geometry->Position, v,                            Color::Navy );
-////	Debug_DrawLine( Geometry->Position, w,                            Color::Red );
-////	Debug_DrawLine( Geometry->Position, CollisionPoint,               Color::Green );
-////	Debug_DrawLine( vector3(0,0,0),     n,                            Color::Orange );
-////	if( !World_GetPaused() ) {
-////		World_Pause();
-////	}
-//}
-//******************************************************************************
-
-//******************************************************************************
-//float RIGID_PHYSICS::BilateralAdvancement(const GEOMETRY* A, const GEOMETRY* B,
-//                                          const vector3 v_a, const vector3 v_b,
-//                                          const vector3 w_a, const vector3 w_b,
-//                                          const float DeltaTime,
-//                                          const float tolerance )
-//{
-//    static const int max_iterations = 50;
-//    float t0 = 0.0;
-//    float t1 = 1.0;
-//    float t = 0.5;
-//    float s = std::numeric_limits<float>::infinity();
-//    int num_iterations = 0;
-//
-////    DEBUG ONLY
-////    float s_range[10];
-////    for( int i = 1; i <= 10; i++ ) {
-////        s_range[i-1] = Seperation( A, B, v_a, v_b, w_a, w_b, n, DeltaTime, i/10.0 );
-////    }
-//
-//    while( ++num_iterations < max_iterations ) {
-//        t = ( t1 + t0 ) / 2.0;
-//        s = Seperation( A, B, v_a, v_b, w_a, w_b, DeltaTime, t );
-//        if( s > 0.0f && s < tolerance ) {
-//            break;
-//        }
-//        // Use bisection to find the root
-//        if( s < 0 ) {
-//            t1 = t;
-//        } else {
-//            t0 = t;
-//        }
-//    }
-//    assert( num_iterations != max_iterations );
-//
-//    return t;
-//}
-//******************************************************************************
-
-//******************************************************************************
-//float RIGID_PHYSICS::Seperation(const GEOMETRY* A, const GEOMETRY* B,
-//                                const vector3 v_a, const vector3 v_b,
-//                                const vector3 w_a, const vector3 w_b,
-//                                const float DeltaTime, const float t)
-//{
-//    vector3 p_a, p_b;
-//    vector3 r_a, r_b;
-//    matrix4 ta, tb;
-//    float timestep = DeltaTime * t;
-//
-//    p_a = A->Position + v_a * timestep;
-//    r_a = A->Rotation + w_a * timestep;
-//    p_b = B->Position + v_b * timestep;
-//    r_b = B->Rotation + w_b * timestep;
-//
-//    ta.translate( p_a );
-//    ta.rotate( r_a );
-//    tb.translate( p_b );
-//    tb.rotate( r_b );
-//
-//    return GetClosestPoint( A, B, ta, tb );
-//}
-////******************************************************************************
-//float RIGID_PHYSICS::GetClosestPoint( const GEOMETRY* A, const GEOMETRY* B, const matrix4 ta, const matrix4 tb )
-//{
-//    vector3 n = GetCollisionPlaneNormal(A,B);
-//    float min = std::numeric_limits<float>::infinity();
-//    for( int i = 0; i < A->NumVertices; i++ ) {
-//        vector3 a = ta * A->VertexList[i];
-//        float d = a.dot( n );
-//        if( d < min ) {
-//            min = d;
-//        }
-//    }
-//    assert( min != std::numeric_limits<float>::infinity() );
-//    return min;
-//}
-////******************************************************************************
 void RigidPhysics_ApplyCollisionResponse(GEOMETRY* A, const GEOMETRY* B)
 {
     float depth;
