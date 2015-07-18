@@ -35,8 +35,6 @@ static void   Main_Draw         ( void );
 static void   Main_Init         ( int argc, char* argv );
 static void   Main_Deinit       ( void );
 
-#define DEBUG 1
-
 //*****************************************************************************
 // Public Interface
 //*****************************************************************************
@@ -63,19 +61,13 @@ static float Main_GetDeltaTime()
 	QueryPerformanceCounter(&t);
 	double DeltaTime = ( t.QuadPart - lastTime.QuadPart ) / (float)f.QuadPart;
 	lastTime = t;
-#ifdef DEBUG
-	char string[256];
-	sprintf_s(string, 256, "[DeltaTime] %f\n", DeltaTime);
-	OutputDebugString(string);
-#endif
+    Debug_Printf("[DeltaTime] %f\n", DeltaTime);
 #else
 	timeval t;
 	gettimeofday(&t, NULL);
 	double DeltaTime = (t.tv_sec - lastTime.tv_sec) + (t.tv_usec - lastTime.tv_usec) / (1000.0*1000.0);
     lastTime = t;
-#ifdef DEBUG
-	printf("[DeltaTime] %f (%f FPS)\n", DeltaTime, 1/DeltaTime);
-#endif
+	Debug_Printf("[DeltaTime] %f (%f FPS)\n", DeltaTime, 1/DeltaTime);
 #endif
 
     return DeltaTime;

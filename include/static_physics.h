@@ -9,5 +9,6 @@ public:
 
 public:
     void Reset() {}
+    vector3 GetGravity() { return vector3(0.0f,0.0f,0.0f); } // MAJOR HACK
 protected:
 };

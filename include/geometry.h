@@ -1,3 +1,5 @@
+#pragma once
+
 #include "common.h"
 #include "vector3.h"
 
@@ -10,9 +12,6 @@ public:
     int       NumFaces;
     face*     FaceList;
 
-    int       NumTriangleVerts;
-    vertex*   TriangleVertList;
-
     // TODO: take this out of the geometry - this is not raw data
     vector3   Position;
     vector3   Rotation;
@@ -20,6 +19,9 @@ public:
     vector3   L; // angular momentum
 
 public:
-    GEOMETRY() { }
+    GEOMETRY() : NumVertices(0)
+        , VertexList(NULL)
+        , NumFaces(0)
+        , FaceList(NULL) { }
     GEOMETRY( GEOMETRY* a ) { *this = *a; }
 };

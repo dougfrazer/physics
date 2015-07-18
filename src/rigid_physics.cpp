@@ -28,6 +28,17 @@ static const matrix3 I_inv = I.inv();
 
 #define DEBUG_ENERGY 0
 #define DRAW_DEBUG_LINES 1
+#define DEBUG_COLLISION 1
+
+#ifdef DEBUG_COLLISION
+#if defined( _WIN32 ) || defined( _WIN64 )
+#include <windows.h>
+#include <strsafe.h>
+#else
+#include <sys/time.h>
+#include <stdio.h>
+#endif
+#endif // DEBUG_COLLISION
 
 //******************************************************************************
 // Support:
@@ -93,9 +104,9 @@ void RIGID_PHYSICS::Reset()
 //******************************************************************************
 
 //******************************************************************************
-void RigidPhysics_TryUpdate( GEOMETRY* To, const GEOMETRY* From, float DeltaTime )
+void RigidPhysics_TryUpdate( GEOMETRY* To, const GEOMETRY* From, vector3 gravity, float DeltaTime )
 {
-    To->p = From->p + ( g * m ) * DeltaTime;
+    To->p = From->p + ( gravity * m ) * DeltaTime;
     To->L = From->L;
 
     vector3 v = To->p * 1/m;
@@ -120,20 +131,32 @@ bool RigidPhysics_DetectCollision( const GEOMETRY* A, const GEOMETRY* B)
 
     // start with any point in the mikowski difference
     vector3 start( (vector3(A->VertexList[0]) + vector3(A->Position)) -
-                   vector3(B->VertexList[0]) + vector3(B->Position) );
+                   (vector3(B->VertexList[0]) + vector3(B->Position)) );
     simplex.push_back( start );
+#ifdef DEBUG_COLLISION
+	Debug_Printf("Trying collision between %p and %p...", A, B);
+#endif
     // go towards the origin
     vector3 d = -start;
     while( true ) {
         vector3 a = Support( d, A, B );
         if( d.dot( a ) < 0 ) {
+#ifdef DEBUG_COLLISION
+            Debug_Printf("false\n");
+#endif
             return false;
         }
         simplex.push_back( a );
         if( Simplex( &simplex, &d, origin ) ) {
+#ifdef DEBUG_COLLISION
+            Debug_Printf("true\n");
+#endif
             return true;
         }
     }
+#ifdef DEBUG_COLLISION
+	Debug_Printf("false\n");
+#endif
     return false;
 }
 

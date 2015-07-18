@@ -49,7 +49,7 @@ void Physics_Update( float DeltaTime )
         for(auto it = updateList.begin(); it != updateList.end(); ++it)
         {
             PHYSICS* physics = *it;
-            RigidPhysics_TryUpdate(physics->Pending, physics->Geometry, currentPercent*DeltaTime);
+            RigidPhysics_TryUpdate(physics->Pending, physics->Geometry, physics->GetGravity(), currentPercent*DeltaTime);
         }
 
         // See if there are any collisions (for everything in the update list, for everything in the world)

@@ -2,6 +2,7 @@
 #define __PHYSICS_H__
 
 #include "common.h"
+#include "vector3.h"
 #include <vector>
 
 class GEOMETRY;
@@ -15,6 +16,7 @@ public:
 public:
     // General reset (utility function)
     virtual void      Reset           ( void ) = 0;
+    virtual vector3   GetGravity      ( void ) = 0;
 
 public:
     GEOMETRY* Geometry;

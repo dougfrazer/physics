@@ -1,5 +1,7 @@
 #include "debug.h"
 
+#ifdef DEBUG
+
 #if __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -16,6 +18,7 @@ struct line {
 
 std::vector<line> debugLines;
 
+//*****************************************************************************
 void Debug_DrawLine( vector3 a, vector3 b, Color c )
 {
 	line l;
@@ -24,7 +27,7 @@ void Debug_DrawLine( vector3 a, vector3 b, Color c )
 	l.c = c;
 	debugLines.push_back(l);
 }
-
+//*****************************************************************************
 void Debug_Draw()
 {
 	glPushMatrix();
@@ -43,8 +46,18 @@ void Debug_Draw()
 	glPopAttrib();
 	glPopMatrix();
 }
-
+//*****************************************************************************
 void Debug_ClearLines()
 {
     debugLines.clear();
 }
+//*****************************************************************************
+void Debug_Printf(const char* s, ...)
+{
+    va_list argptr;
+    va_start(argptr, s);
+    vfprintf(stderr, s, argptr);
+    va_end(argptr);
+}
+
+#endif // DEBUG
