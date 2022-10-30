@@ -3,37 +3,39 @@
 #include "camera.h"
 #include "debug.h"
 
-#if defined( __APPLE__ )
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
+#include <windows.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Forward Declarations
 ///////////////////////////////////////////////////////////////////////////////
+#if 0
 static void releaseKey(int key, int x, int y);
 static void pressKey(int key, int x, int y);
 static void processNormalKeys(unsigned char key, int x, int y);
 static void releaseNormalKeys(unsigned char key, int x, int y);
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public functions
 ///////////////////////////////////////////////////////////////////////////////
 void Input_Init()
 {
-    // Glut Input Commands
-    glutIgnoreKeyRepeat(1);
-    glutSpecialFunc(pressKey);
-    glutSpecialUpFunc(releaseKey);
-    glutKeyboardFunc(processNormalKeys);
-    glutKeyboardUpFunc(releaseNormalKeys);
+
+}
+void Input_Deinit()
+{
+
+}
+void Input_Update(const Input& inputs)
+{
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Private functions
 ///////////////////////////////////////////////////////////////////////////////
 
+#if 0
 void pressKey(int key, int x, int y)
 {
     switch (key)
@@ -86,3 +88,4 @@ void releaseNormalKeys(unsigned char key, int x, int y)
     case 'e': Camera_StopMove(DOWN)   ; break;
     }
 }
+#endif

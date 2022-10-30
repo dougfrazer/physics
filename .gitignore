@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/windows/physics/.vs/physics
+/windows/physics/Debug
+/windows/physics/physics/Debug
+/.vs/physics/v17

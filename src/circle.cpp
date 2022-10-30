@@ -1,3 +1,5 @@
+#include "windows.h"
+
 #include "circle.h"
 #include "geometry.h"
 #include "rigid_physics.h"
@@ -8,11 +10,8 @@
 #include "string.h"
 
 
-#if defined( __APPLE__ )
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 static const vector3 InitialPosition( 0.0, 40.0, 0.0 );
 static const vector3 InitialRotation( 0.0, 0.0, 0.0 );
@@ -46,6 +45,7 @@ void CIRCLE::Update( float DeltaTime )
 {
 }
 
+
 void CIRCLE::Draw( void )
 {
 	GLfloat modelMatrix[16];
@@ -65,28 +65,9 @@ void CIRCLE::Draw( void )
 	glMatrixMode( GL_MODELVIEW );
 	glLoadMatrixf( (GLfloat*)&transform );
 
-	// draw something at the center so it can be distinguished
+    // make it red... for no particular reason
 	glColor3f(1.0,0.0,0.0);
-	glutWireSphere( 1, 5, 5 );
 	
-	glColor3f(0.0,0.0,1.0);
-    glBegin( GL_LINE_STRIP );
-        for( int i = 0; i < Geometry->NumFaces; i++ ) {
-            glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v1 ]);
-            glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v2 ]);
-            glVertex3fv((GLfloat*)&Geometry->VertexList[ Geometry->FaceList[ i ].v3 ]);
-        } 
-    glEnd();
-
-	/*
-	matrix4 transform;
-	transform.translate( Geometry->Position );
-	transform.rotate( Geometry->Rotation );
-	for( uint i = 0; i < Physics->Pending->NumVertices; i++ ) {
-		Physics->Pending->VertexList[i] = transform * Geometry->VertexList[i];
-	}
-
-	glColor3f(0.0,0.0,1.0);
 	glBegin( GL_LINE_STRIP );
 	for( int i = 0; i < Geometry->NumFaces; i++ ) {
 		glVertex3fv((GLfloat*)&Physics->Pending->VertexList[ Geometry->FaceList[ i ].v1 ]);
@@ -94,8 +75,7 @@ void CIRCLE::Draw( void )
 		glVertex3fv((GLfloat*)&Physics->Pending->VertexList[ Geometry->FaceList[ i ].v3 ]);
 	} 
 	glEnd();
-	*/
-
+    
     glPopMatrix();
 
 /*
@@ -112,7 +92,7 @@ void CIRCLE::Draw( void )
         glVertex3fv( (GLfloat*)&rot  );
     glEnd();
 */
-	glPopAttrib();
+//	glPopAttrib();
 }
 
 //

@@ -1,8 +1,8 @@
-#if defined( __APPLE__ )
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
+#include "windows.h"
+
+#include <GL/gl.h>
+#include <GL/glu.h>
+
 
 #include "camera.h"
 #include "vector3.h"

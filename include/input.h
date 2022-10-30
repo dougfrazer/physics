@@ -1,6 +1,8 @@
-#ifndef __INPUT_H__
-#define __INPUT_H__
+#pragma once
+
+#include "window.h"
 
 void Input_Init();
+void Input_Deinit();
 
-#endif
+void Input_Update(const Input& input);
