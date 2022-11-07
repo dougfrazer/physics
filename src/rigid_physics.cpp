@@ -10,21 +10,21 @@
 #include "debug.h" // temporary
 #include "world.h" // temporary
 
-static const vector3 g( 0.0, -9.8, 0.0);
-static const float e = 1.0f;
-static const vector3 StartingVelocity( 0.0, 0.0, 0.0 );
-static const vector3 origin;
-// TODO: make all of this material data stored parallel to geometry
-// Mass
-static const float m = 10.0;
-// Inertia Tensor ( for a circle )
-static const float r = 5.0f;
-static const float moment_of_inertia = 0.4f*m*r*r;
-static const matrix3 I( moment_of_inertia, 0.0, 0.0,
-                        0.0, moment_of_inertia, 0.0,
-                        0.0, 0.0, moment_of_inertia );
-// Inverse Inertia Tensor
-static const matrix3 I_inv = I.inv();
+//static const vector3 g( 0.0, -9.8, 0.0);
+//static const float elasticity = 1.0f;
+//static const vector3 StartingVelocity( 0.0, 0.0, 0.0 );
+//static const vector3 origin;
+//// TODO: make all of this material data stored parallel to geometry
+//// Mass
+//static const float m = 10.0;
+//// Inertia Tensor ( for a circle )
+//static const float r = 5.0f;
+//static const float moment_of_inertia = 0.4f*m*r*r;
+//static const matrix3 I( moment_of_inertia, 0.0, 0.0,
+//                        0.0, moment_of_inertia, 0.0,
+//                        0.0, 0.0, moment_of_inertia );
+//// Inverse Inertia Tensor
+//static const matrix3 I_inv = I.inv();
 
 #define DEBUG_ENERGY 0
 #define DRAW_DEBUG_LINES 1
@@ -45,10 +45,9 @@ static const matrix3 I_inv = I.inv();
 // --------
 //   This will attempt to find the closest point in the geometry to the vector
 //   passed in.
-//******************************************************************************
-static vector3 Support( const vector3 d, const GEOMETRY* Geo );
+//******************************************************************************;
 static vector3 Support( const vector3 d, const GEOMETRY* Geo, const matrix4* m );
-static vector3 Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B );
+static vector3 Support( const vector3 d, const GEOMETRY* A, const matrix4* at, const GEOMETRY* B, const matrix4* bt);
 
 //******************************************************************************
 // Simplex:
@@ -64,16 +63,11 @@ static vector3 Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B );
 //******************************************************************************
 static bool Simplex( std::vector<vector3>* list, vector3* d, const vector3 dest );
 
-//
-// FORWARD DECLARATION
-//
-static void ApplyImpulseResponse( GEOMETRY* A, const matrix3 I_inv, const float m, const vector3 r, const vector3 n, const vector3 v, const vector3 w );
-
 //******************************************************************************
-RIGID_PHYSICS::RIGID_PHYSICS( GEOMETRY* Geo )
-    : PHYSICS( Geo )
+RIGID_PHYSICS::RIGID_PHYSICS( GEOMETRY* Geo, vector3 initialPosition )
+    : PHYSICS( Geo, initialPosition)
 {
-    Reset();
+    Reset(initialPosition);
 }
 //******************************************************************************
 
@@ -87,33 +81,30 @@ RIGID_PHYSICS::~RIGID_PHYSICS()
 // forward declarations
 //
 static vector3 GetCollisionPoint( const GEOMETRY* A, const GEOMETRY* B, float* depth );
-static vector3 GetCollisionPlaneNormal( const GEOMETRY* A, const GEOMETRY* B );
-
 //******************************************************************************
-void RIGID_PHYSICS::Reset()
+void RIGID_PHYSICS::Reset(const vector3& pos)
 {
 	srand(time(NULL));
     static const float MaxRandomRotation = 360.0 * PI / 180.0;
-    Geometry->p = origin;
-    Geometry->L = origin;
-	Geometry->Rotation.x = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
-	Geometry->Rotation.y = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
-	Geometry->Rotation.z = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
-    *Pending = *Geometry;
+    m_physData.p = origin;
+    m_physData.L = origin;
+	m_physData.Rotation.x = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
+	m_physData.Rotation.y = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
+	m_physData.Rotation.z = (float)rand()/((float)RAND_MAX/MaxRandomRotation);
+    m_physData.Position = pos;
 }
 //******************************************************************************
 
 //******************************************************************************
-void RigidPhysics_TryUpdate( GEOMETRY* To, const GEOMETRY* From, vector3 gravity, float DeltaTime )
+void RIGID_PHYSICS::Update( float DeltaTime )
 {
-    To->p = From->p + ( gravity * m ) * DeltaTime;
-    To->L = From->L;
+    m_physData.p = m_physData.p + ( GetGravity() * m) * DeltaTime;
 
-    vector3 v = To->p * 1/m;
-    vector3 w = I_inv * To->L;
+    vector3 v = m_physData.p * 1/m;
+    vector3 w = I_inv * m_physData.L;
 
-    To->Position = From->Position + v * DeltaTime;
-    To->Rotation = From->Rotation + w * DeltaTime;
+    m_physData.Position = m_physData.Position + v * DeltaTime;
+    m_physData.Rotation = m_physData.Rotation + w * DeltaTime;
 
 #if DEBUG_ENERGY
     vector3 vel = To->p * 1/m;
@@ -125,102 +116,104 @@ void RigidPhysics_TryUpdate( GEOMETRY* To, const GEOMETRY* From, vector3 gravity
 #endif
 }
 //******************************************************************************
-bool RigidPhysics_DetectCollision( const GEOMETRY* A, const GEOMETRY* B)
+bool RIGID_PHYSICS::DetectCollision( const GEOMETRY* otherGeo, const PhysicsData& otherPhys, Collision* outCollision) const
 {
     std::vector<vector3> simplex;
 
+    // TODO: broad phase
+
     // start with any point in the mikowski difference
-    vector3 start( (vector3(A->VertexList[0]) + vector3(A->Position)) -
-                   (vector3(B->VertexList[0]) + vector3(B->Position)) );
+    vector3 start( (vector3(m_geometry->VertexList[0]) + vector3(m_physData.Position)) -
+                   (vector3(otherGeo->VertexList[0]) + vector3(otherPhys.Position)) );
     simplex.push_back( start );
-#ifdef DEBUG_COLLISION
-	Debug_Printf("Trying collision between %p and %p...", A, B);
-#endif
+
     // go towards the origin
     vector3 d = -start;
     while( true ) {
-        vector3 a = Support( d, A, B );
+        matrix4 a_transform;
+        a_transform.translate(m_physData.Position);
+        a_transform.rotate(m_physData.Rotation);
+        matrix4 b_transform;
+        b_transform.translate(otherPhys.Position);
+        b_transform.rotate(otherPhys.Rotation);
+        vector3 a = Support( d, m_geometry, &a_transform, otherGeo, &b_transform);
         if( d.dot( a ) < 0 ) {
-#ifdef DEBUG_COLLISION
-            Debug_Printf("false\n");
-#endif
             return false;
         }
         simplex.push_back( a );
         if( Simplex( &simplex, &d, origin ) ) {
-#ifdef DEBUG_COLLISION
-            Debug_Printf("true\n");
-#endif
+            //if (outCollision)
+            //{
+            //    outCollision->a = this;
+            //    outCollision->b = other;
+            //    plane_point_normal collisionPlane = GetCollisionPlane(A,B);
+            //    outCollision->collisionPlaneNormal = collisionPlane.normal;
+            //    outCollision->collisionPlanePoint = collisionPlane.point;
+            //    float collisionDepth = 0.0f;
+            //    outCollision->collisionPoint = GetCollisionPoint(A,B,&collisionDepth);
+            //    outCollision->collisionDepth = collisionDepth;
+            //}
             return true;
         }
     }
-#ifdef DEBUG_COLLISION
-	Debug_Printf("false\n");
-#endif
+
     return false;
 }
-
 //******************************************************************************
-void RigidPhysics_ApplyCollisionResponse(GEOMETRY* A, const GEOMETRY* B)
+struct plane_point_normal
 {
-    float depth;
-	vector3 CollisionPoint = GetCollisionPoint( A, B, &depth );
-    vector3 n = GetCollisionPlaneNormal( A, B );
-    vector3 r = CollisionPoint - A->Position;
-
-    // Attempt to move the bodies out of the collision
-    vector3 none;
-    vector3 v = A->p * 1/m;
-    vector3 w = I_inv * A->L;
-
-    // Apply the forces to the bodies
-    ApplyImpulseResponse( A, I_inv, m, r, n, v, w );
-}
-//******************************************************************************
-void ApplyImpulseResponse( GEOMETRY* A, const matrix3 I_inv, const float m, const vector3 r, const vector3 n, const vector3 v, const vector3 w )
-{
-    vector3 velocityAtPoint = v + w.cross(r);
-    float i = -( 1.0 + e ) * velocityAtPoint.dot( n );
-    float k = 1/m + ( (I_inv * r.cross(n) ).cross(r) ).dot(n);
-    float j = i / k;
-    A->p = A->p + n * j;
-    A->L = A->L + r.cross(n) * j;
-}
-//******************************************************************************
-
+    vector3 normal;
+    vector3 point;
+};
 
 //******************************************************************************
-vector3 GetCollisionPlaneNormal( const GEOMETRY* A, const GEOMETRY* B )
+plane_point_normal GetCollisionPlane(const GEOMETRY* A, const GEOMETRY* B)
 {
     // TODO
-    vector3 v(0.0, 1.0, 0.0);
-    return v;
+    return plane_point_normal({ {0.0f, 1.0f, 0.0f}, { 0.0f, 0.0f, 0.0f } });
 }
 //******************************************************************************
-
-//******************************************************************************
-vector3 GetCollisionPoint( const GEOMETRY* A, const GEOMETRY* B, float* depth )
+void RIGID_PHYSICS::ApplyCollisionResponse(CollisionData& data)
 {
-    matrix4 m;
-    m.translate( A->Position );
-    m.rotate( A->Rotation );
-    vector3 planeNormal = GetCollisionPlaneNormal( A, B );
-    float min = std::numeric_limits<float>::infinity() ;
-    vector3 ret;
-    for( int i = 0; i < A->NumVertices; i++ ) {
-        vector3 current = vector3( m * vector4(A->VertexList[i]) );
-        float d = current.dot( planeNormal );
-        if( d < min ) {
-            min = d;
-            ret = current;
-        }
-    }
-    assert( min != std::numeric_limits<float>::infinity() );
-    if(depth) {
-        *depth = fabs(min);
-    }
-    return ret;
+    vector3 n = data.planeNormal;
+    vector3 r = data.point - m_physData.Position;
+
+    // Attempt to move the bodies out of the collision
+    vector3 v = m_physData.p * 1/m;
+    vector3 w = I_inv * m_physData.L;
+
+    // Apply the forces to the bodies
+    // rigid body impulse response
+    vector3 velocityAtPoint = v + w.cross(r);
+    float i = -(1.0 + elasticity) * velocityAtPoint.dot(n);
+    float k = 1 / m + ((I_inv * r.cross(n)).cross(r)).dot(n);
+    float j = i / k;
+    m_physData.p = m_physData.p + n * j;
+    m_physData.L = m_physData.L + r.cross(n) * j;
 }
+//******************************************************************************
+//vector3 GetCollisionPoint( const GEOMETRY* A, const GEOMETRY* B, float* depth )
+//{
+//    matrix4 m;
+//    m.translate( A->Position );
+//    m.rotate( A->Rotation );
+//    plane_point_normal collisionPlane = GetCollisionPlane(A,B);
+//    float min = std::numeric_limits<float>::infinity() ;
+//    vector3 ret;
+//    for( int i = 0; i < A->NumVertices; i++ ) {
+//        vector3 current = vector3( m * vector4(A->VertexList[i]) );
+//        float d = (current - collisionPlane.point).dot( collisionPlane.normal );
+//        if( d < min ) {
+//            min = d;
+//            ret = current;
+//        }
+//    }
+//    assert( min != std::numeric_limits<float>::infinity() );
+//    if(depth) {
+//        *depth = min;
+//    }
+//    return ret;
+//}
 //******************************************************************************
 
 //******************************************************************************
@@ -228,17 +221,9 @@ vector3 GetCollisionPoint( const GEOMETRY* A, const GEOMETRY* B, float* depth )
 // This is the same as saying find the furthest point in A in the direction of d
 // MINUS the furthest point in B in the opposite direction
 //******************************************************************************
-vector3 Support( const vector3 d, const GEOMETRY* A, const GEOMETRY* B )
+vector3 Support( const vector3 d, const GEOMETRY* A, const matrix4* A_transform, const GEOMETRY* B, const matrix4* B_transform )
 {
-    return Support( d, A ) - Support( -d, B );
-}
-//******************************************************************************
-vector3 Support( const vector3 d, const GEOMETRY* Geo )
-{
-	matrix4 transform;
-	transform.translate( Geo->Position );
-	transform.rotate( Geo->Rotation );
-    return Support( d, Geo, &transform );
+    return Support( d, A, A_transform ) - Support( -d, B, B_transform );
 }
 //******************************************************************************
 vector3 Support( const vector3 d, const GEOMETRY* Geo, const matrix4* const m )

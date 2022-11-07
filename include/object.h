@@ -10,9 +10,10 @@ public:
     virtual void Update ( float DeltaTime ) = 0;
     virtual void Draw   ( void ) = 0;
     virtual void Reset  ( void ) = 0;
+
 protected:
-    GEOMETRY*  Geometry;
-    PHYSICS*   Physics;
+    GEOMETRY*  m_geometry;
+    PHYSICS*   m_physics;
 };
 
 

@@ -66,13 +66,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\camera.cpp" />
     <ClCompile Include="..\..\..\src\circle.cpp" />
+    <ClCompile Include="..\..\..\src\collision_detection.cpp" />
     <ClCompile Include="..\..\..\src\debug.cpp" />
     <ClCompile Include="..\..\..\src\input.cpp" />
     <ClCompile Include="..\..\..\src\main.cpp" />
     <ClCompile Include="..\..\..\src\matrix.cpp" />
     <ClCompile Include="..\..\..\src\physics.cpp" />
     <ClCompile Include="..\..\..\src\quaternion.cpp" />
-    <ClCompile Include="..\..\..\src\rigid_physics.cpp" />
     <ClCompile Include="..\..\..\src\square.cpp" />
     <ClCompile Include="..\..\..\src\vector3.cpp" />
     <ClCompile Include="..\..\..\src\vector4.cpp" />
@@ -91,9 +91,7 @@
     <ClInclude Include="..\..\..\include\physics.h" />
     <ClInclude Include="..\..\..\include\plane.h" />
     <ClInclude Include="..\..\..\include\quaternion.h" />
-    <ClInclude Include="..\..\..\include\rigid_physics.h" />
     <ClInclude Include="..\..\..\include\square.h" />
-    <ClInclude Include="..\..\..\include\static_physics.h" />
     <ClInclude Include="..\..\..\include\vector3.h" />
     <ClInclude Include="..\..\..\include\vector4.h" />
     <ClInclude Include="..\..\..\include\world.h" />

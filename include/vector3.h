@@ -16,6 +16,7 @@ public:
 
 public:
     vector3();
+    vector3(const float _x);
     vector3(const vertex v);
 	vector3(const vector4 v);
     vector3(const float _x, const float _y, const float _z);
@@ -32,6 +33,8 @@ public:
     float    magnitude( void )        const;
     vector3  normalize( void )        const;
     
+    bool IsNone() const { return FloatEquals(x, 0.0f) && FloatEquals(y, 0.0f) && FloatEquals(z, 0.0f); }
+
     vector3  rotate( vector3 axis, float degrees ) const;
 };
 

@@ -15,9 +15,9 @@ public:
     void Reset     ( void );
 	
 private:
-    float       radius;
+    const float  m_radius;
 
-    void CreateIcosahadron(float r, GEOMETRY* Geometry, int subdivision);
+    void CreateIcosahadron(float r, GEOMETRY* geometry, int subdivision);
 };
 
 #endif

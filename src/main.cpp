@@ -8,6 +8,7 @@
 #include "common.h"
 #include "debug.h"
 #include "input.h"
+#include "physics.h"
 
 #include <chrono>
 #include <thread>
@@ -60,13 +61,13 @@ static void RenderThread()
 static void UpdateThread()
 {
     auto frameEnd = std::chrono::high_resolution_clock::now();
-    auto fpsLimit = std::chrono::duration<double, std::milli>(1.l/60.l);
+    //auto fpsLimit = std::chrono::duration<double, std::milli>(1.l/60.l);
     constexpr float MAX_FPS_MS = (1000.f / 60.f);
     while (s_running)
     {
         auto frameStart = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> delta_ms = (frameStart - frameEnd);
-        float dt = delta_ms.count() / 1000.f;
+        float dt = min(MAX_FPS_MS, (float)(delta_ms.count())) / 1000.f;
 
         // Consume Input
         Input input = s_input;
@@ -74,6 +75,7 @@ static void UpdateThread()
         Input_Update(input);
         
         // update state of world
+        Physics_Update(dt);
         World_Update(dt);
         Camera_Update(dt);
 

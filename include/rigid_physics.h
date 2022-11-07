@@ -5,24 +5,21 @@
 
 
 void RigidPhysics_TryUpdate(GEOMETRY* To, const GEOMETRY* From, vector3 gravity, float DeltaTime);
-bool RigidPhysics_DetectCollision(const GEOMETRY* A, const GEOMETRY* B);
-void RigidPhysics_ApplyCollisionResponse(GEOMETRY* A, const GEOMETRY* B);
+bool RigidPhysics_DetectCollision(const GEOMETRY* A, const GEOMETRY* B, Collision* outCollision);
+void RigidPhysics_ApplyCollisionResponse(Collision& collision);
 
 
 class RIGID_PHYSICS : public PHYSICS
 {
 public:
-    RIGID_PHYSICS( GEOMETRY* Geometry );
+    RIGID_PHYSICS( GEOMETRY* geometry, vector3 initialPosition );
     ~RIGID_PHYSICS();
 
 public:
-    void Reset( );
-    vector3 GetGravity() { return vector3(0.0f,-9.8f,0.0f); } // MAJOR HACK
-protected:
-// TODO: private
-public:
-    vertex*   x; // position (center of mass)
-
-private:
+    void Reset(const vector3& pos);
+    vector3 GetGravity() { return vector3(0.0f,-9.8f,0.0f); }
+    bool DetectCollision(const GEOMETRY* otherGeo, const PhysicsData& otherPhys, Collision* outCollision) const override;
+    void Update(float deltaTime) override;
+    void ApplyCollisionResponse(CollisionData& collision) override;
 
 };

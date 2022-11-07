@@ -7,6 +7,12 @@ vector3::vector3() {
     y = 0.0;
     z = 0.0;
 }
+vector3::vector3(const float v)
+{
+    x = v;
+    y = v;
+    z = v;
+}
 vector3::vector3(const vertex v) { 
     x = v.x;
     y = v.y;

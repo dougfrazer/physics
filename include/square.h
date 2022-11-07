@@ -16,10 +16,9 @@ public:
     void Draw      ( void );
     void Reset     ( void );
 private:
-    float      size;
-    vertex     position;
-    GEOMETRY*  Geometry;
-    PHYSICS*   Physics;
+    const float m_size;
+    GEOMETRY*  m_geometry;
+    PHYSICS*   m_physics;
 };
 
 #endif
