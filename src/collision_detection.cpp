@@ -64,7 +64,7 @@ static vector3 GetCollisionPoint(const PHYSICS* a, const PHYSICS* b, float* dept
     return ret;
 }
 //******************************************************************************
-bool DetectCollision(const PHYSICS* a, const PHYSICS* b, Collision* outCollision)
+bool DetectCollision(const PHYSICS* a, const PHYSICS* b, CollisionData* outCollision)
 {
     std::vector<vector3> simplex;
 
@@ -95,13 +95,11 @@ bool DetectCollision(const PHYSICS* a, const PHYSICS* b, Collision* outCollision
         {
             if (outCollision)
             {
-                outCollision->a = a;
-                outCollision->b = b;
-                outCollision->data.planeNormal = s_planeNormal;
-                outCollision->data.planePoint = s_planePoint;
+                outCollision->planeNormal = s_planeNormal;
+                outCollision->planePoint = s_planePoint;
                 float collisionDepth = 0.0f;
-                outCollision->data.point = GetCollisionPoint(a,b,&collisionDepth);
-                outCollision->data.depth = collisionDepth;
+                outCollision->point = GetCollisionPoint(a,b,&collisionDepth);
+                outCollision->depth = collisionDepth;
             }
             return true;
         }

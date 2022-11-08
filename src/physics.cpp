@@ -54,7 +54,7 @@ void OnCollision(Collision& data, bool pushOut)
     {
         case COLLISION_RESPONSE_IMPULSE:
         {
-            ApplyImpulseResponse(const_cast<PHYSICS*>(data.a), data.data, pushOut);
+            ApplyImpulseResponse(data.a, data.data, pushOut);
         }
         default:
             break;
@@ -64,7 +64,7 @@ void OnCollision(Collision& data, bool pushOut)
     {
         case COLLISION_RESPONSE_IMPULSE:
         {
-            ApplyImpulseResponse(const_cast<PHYSICS*>(data.b), data.data, pushOut);
+            ApplyImpulseResponse(data.b, data.data, pushOut);
         }
         default:
             break;
@@ -81,10 +81,10 @@ std::vector<Collision> GetCollisions(std::vector<PHYSICS*> updateList)
             if (it == innerIt)
                 continue; // can't collide with yourself
 
-            Collision collision;
-            if (DetectCollision(*it, *innerIt, &collision))
+            CollisionData collisionData;
+            if (DetectCollision(*it, *innerIt, &collisionData))
             {
-                collisions.push_back(collision);
+                collisions.push_back({*it, *innerIt, collisionData});
                 break;
             }
         }

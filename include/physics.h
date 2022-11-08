@@ -73,8 +73,8 @@ struct CollisionData
 
 struct Collision
 {
-    const PHYSICS* a;
-    const PHYSICS* b;
+    PHYSICS* a;
+    PHYSICS* b;
     CollisionData data;
 };
-bool DetectCollision(const PHYSICS* a, const PHYSICS* b, Collision* outCollision);
+bool DetectCollision(const PHYSICS* a, const PHYSICS* b, CollisionData* outCollision);
